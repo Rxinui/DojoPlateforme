@@ -30,7 +30,6 @@ class BasicResponse(BaseModel):
     msg: message to describe a response
     items: data to submit with the response
     """
-
     msg: str = ...
     items: dict = {}
 

@@ -1,5 +1,5 @@
 from vboxmanage import VBoxManageList, VBoxManageListParser
-
+import csv
 
 class TestVBoxManageList:
     def setup_method(self):

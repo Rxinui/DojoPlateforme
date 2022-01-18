@@ -1,0 +1,14 @@
+{
+    "server": {
+        "projectPath": "/opt/pfe/",
+        "ignore": [
+            ".pytest_cache/*",
+            ".vscode/*",
+            "pyvenv/*",
+            "__pycache__/*",
+            "api/*",
+            ".git*",
+            "_sync_server.py"
+        ]
+    }
+}

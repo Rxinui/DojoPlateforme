@@ -2,7 +2,7 @@
 Python wrapper for VBoxManage command-line tool.
 
 @author rly
-@date 21/01/2022
+@date 2022-01-21
 @see https://www.virtualbox.org/manual/ch08.html
 """
 
