@@ -40,4 +40,8 @@ Control vm to apply action such as
 - Unpause vm `VBoxManage controlvm (<uuid> | <vmname>) resume`
 - Power off vm `VBoxManage controlvm (<uuid> | <vmname>) poweroff`
 - Save vm state then close `VBoxManage controlvm (<uuid> | <vmname>) savestate`
+<<<<<<< HEAD
 - Reboot vm without saving `VBoxManage controlvm (<uuid> | <vmname>) reset`
+=======
+- Reboot vm without saving `VBoxManage controlvm (<uuid> | <vmname>) reset`
+>>>>>>> ea8812d... new: VBoxManageList commands work with API
