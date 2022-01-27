@@ -1,0 +1,8 @@
+# global python requirements
+paramiko
+black
+pylint
+pytest
+
+# api/api_vbox/ requirements
+-r api/api_vbox/requirements.txt

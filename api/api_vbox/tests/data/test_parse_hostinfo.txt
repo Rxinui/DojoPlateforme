@@ -1,0 +1,41 @@
+Host Information:
+
+Host time: 2022-01-24T19:30:58.536000000Z
+Processor online count: 12
+Processor count: 12
+Processor online core count: 6
+Processor core count: 6
+Processor supports HW virtualization: yes
+Processor supports PAE: yes
+Processor supports long mode: yes
+Processor supports nested paging: yes
+Processor supports unrestricted guest: yes
+Processor supports nested HW virtualization: yes
+Processor#0 speed: 3800 MHz
+Processor#0 description: Intel(R) Xeon(R) CPU E5-1650 v3 @ 3.50GHz
+Processor#1 speed: 3800 MHz
+Processor#1 description: Intel(R) Xeon(R) CPU E5-1650 v3 @ 3.50GHz
+Processor#2 speed: 3800 MHz
+Processor#2 description: Intel(R) Xeon(R) CPU E5-1650 v3 @ 3.50GHz
+Processor#3 speed: 3800 MHz
+Processor#3 description: Intel(R) Xeon(R) CPU E5-1650 v3 @ 3.50GHz
+Processor#4 speed: 3800 MHz
+Processor#4 description: Intel(R) Xeon(R) CPU E5-1650 v3 @ 3.50GHz
+Processor#5 speed: 3800 MHz
+Processor#5 description: Intel(R) Xeon(R) CPU E5-1650 v3 @ 3.50GHz
+Processor#6 speed: 3800 MHz
+Processor#6 description: Intel(R) Xeon(R) CPU E5-1650 v3 @ 3.50GHz
+Processor#7 speed: 3800 MHz
+Processor#7 description: Intel(R) Xeon(R) CPU E5-1650 v3 @ 3.50GHz
+Processor#8 speed: 3800 MHz
+Processor#8 description: Intel(R) Xeon(R) CPU E5-1650 v3 @ 3.50GHz
+Processor#9 speed: 3800 MHz
+Processor#9 description: Intel(R) Xeon(R) CPU E5-1650 v3 @ 3.50GHz
+Processor#10 speed: 3800 MHz
+Processor#10 description: Intel(R) Xeon(R) CPU E5-1650 v3 @ 3.50GHz
+Processor#11 speed: 3800 MHz
+Processor#11 description: Intel(R) Xeon(R) CPU E5-1650 v3 @ 3.50GHz
+Memory size: 64208 MByte
+Memory available: 62335 MByte
+Operating system: Linux
+Operating system version: 5.4.0-92-generic

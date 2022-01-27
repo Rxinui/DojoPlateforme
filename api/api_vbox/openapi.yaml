@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+  title: api_vbox
+  description: server that handle vbox manager tool to create virtual box on-demand.
+  contact:
+    name: Rainui Ly
+    email: rainui.ly@gmail.com
+  version: v0.0.1
+paths:
+  /vbox/:
+    description: Refers to all actions related to vbox.
+    get:
+      description: Get status of all vbox on the server
+      responses:
+        "2XX":
+          description: set of vbox status returned
+  /vbox/{idVbox}:
+    description: Refers to all actions related to vbox with a given id
+    get:
+      description: Get status of a given vbox on the server according to the idVbox
+      parameters:
+        - name: idVbox
+          in: path
+          description: vbox id
+          required: true
+          schema:
+            type: string
+      responses:
+        "2XX":
+          description: vbox status returned
+        "4XX":
+          description: idVbox is not associated to a vbox

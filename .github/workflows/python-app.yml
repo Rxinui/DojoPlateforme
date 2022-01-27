@@ -23,8 +23,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install black pylint pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    # - name: Format code with black
-    #   uses: psf/black@stable
     - name: Lint with pylint
       run: |
         find api/api_vbox/ -name '*.py' -exec pylint {} --rcfile $GITHUB_WORKSPACE/.pylintrc \;
