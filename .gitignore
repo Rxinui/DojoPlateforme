@@ -10,3 +10,6 @@
 # Ignore system/virtualbox/ dir that contains big files
 system/virtualbox/ovf/
 system/virtualbox/vms/
+
+# Ignore dev configuration
+.sync.*.json

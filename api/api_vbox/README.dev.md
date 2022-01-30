@@ -1,6 +1,6 @@
 # API vbox
 
-@author rly
+@author Rxinui
 
 For devs only.
 

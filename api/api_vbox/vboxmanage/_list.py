@@ -1,7 +1,7 @@
 """
 Python builder for VBoxManage 'list' subcommand-line tool.
 
-@author rly
+@author Rxinui
 @date 21/01/2022
 @see https://www.virtualbox.org/manual/ch08.html#vboxmanage-list
 """
