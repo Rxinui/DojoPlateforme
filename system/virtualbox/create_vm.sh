@@ -3,9 +3,9 @@
 """
 Create a virtualbox VM
 
-@state: wip; ko
-@version: 0.0.1
-@author: rly
+@state wip; ko
+@version 0.0.1
+@author Rxinui
 """
 
 path_ovf=$1

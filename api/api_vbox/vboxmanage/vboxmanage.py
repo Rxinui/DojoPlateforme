@@ -1,7 +1,7 @@
 """
 Python wrapper for VBoxManage command-line tool.
 
-@author rly
+@author Rxinui
 @date 2022-01-21
 @see https://www.virtualbox.org/manual/ch08.html
 """
