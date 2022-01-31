@@ -167,7 +167,6 @@ def _file_has_changes(filename: Union[Path, str]) -> bool:
         remote_output, _ = exec_remote_command(build_ls(filename))
         remote_datetime = extract_datetime_filename(remote_output)
         local_datetime = datetime.fromtimestamp(relative_filename.stat().st_mtime)
-        logger.info("debug: remote=%s local=%s", remote_datetime, local_datetime)
         deltatime = remote_datetime - local_datetime
     except RemoteCommandError:
         sys.exit(EXIT_REMOTE_COMMAND_ERROR)
