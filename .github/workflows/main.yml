@@ -33,10 +33,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install black pylint pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Lint with pylint
-        run: |
-          find api/api_vbox/ -name '*.py' -exec pylint {} --rcfile $GITHUB_WORKSPACE/.pylintrc \;
       - name: Test api/api_vbox/ with pytest
         run: |
           cd $GITHUB_WORKSPACE/api/api_vbox/ && pytest; 
           cd $GITHUB_WORKSPACE
+      - name: Lint with pylint
+        run: |
+          find api/api_vbox/ -name '*.py' -exec pylint {} --rcfile $GITHUB_WORKSPACE/.pylintrc \;
