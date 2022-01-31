@@ -1,4 +1,4 @@
-
+#!/bin/bash
 trap kill_web_server SIGHUP SIGINT SIGKILL
 
 function kill_web_server(){

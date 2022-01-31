@@ -1,0 +1,224 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "API vbox",
+    "description": "OpenAPI of API vbox",
+    "version": "0.1"
+  },
+  "servers": [
+    {
+      "url": "https://localhost:8000/",
+      "description": "API dev server"
+    }
+  ],
+  "paths": {
+    "/vbox": {
+      "get": {
+        "summary": "Vbox Manage List",
+        "description": "Apply `VBoxManage list <directive>` according to {list} q parameter.\n\nArgs:\n    list (Optional[Query[List[str]]]): q to list\n\nReturns:\n    (BasicResponse): /vbox result",
+        "operationId": "vbox_manage_list_vbox_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "title": "Q",
+              "pattern": "^((vms|runningvms|intnets|hostinfo|groups|systemproperties|bridgedifs|hostonlyifs|natnets|dhcpservers),?)+$",
+              "type": "string"
+            },
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Sort",
+              "type": "boolean",
+              "default": false
+            },
+            "name": "sort",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Long",
+              "type": "boolean",
+              "default": false
+            },
+            "name": "long",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicError"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BasicError": {
+        "title": "BasicError",
+        "required": [
+          "msg"
+        ],
+        "type": "object",
+        "properties": {
+          "msg": {
+            "title": "Msg",
+            "type": "string"
+          }
+        },
+        "description": "API error response model\n\nmsg: message to describe a response"
+      },
+      "BasicResponse": {
+        "title": "BasicResponse",
+        "required": [
+          "msg"
+        ],
+        "type": "object",
+        "properties": {
+          "msg": {
+            "title": "Msg",
+            "type": "string"
+          },
+          "items": {
+            "title": "Items",
+            "type": "object",
+            "default": {}
+          }
+        },
+        "description": "API response model\n\nmsg: message to describe a response\nitems: data to submit with the response"
+      },
+      "HTTPValidationError": {
+        "title": "HTTPValidationError",
+        "type": "object",
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "title": "ValidationError",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "loc": {
+            "title": "Location",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "apiAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [
+    {
+      "apiAuth": []
+    }
+  ]
+}
