@@ -1,0 +1,14 @@
+{
+    "1": {
+        "username": "rly",
+        "password": "fakepassword",
+        "scope": "api_vbox:info",
+        "role": "standard"
+    },
+    "2": {
+        "username": "sjosset",
+        "password": "fakepassword",
+        "scope": "api_vbox:info",
+        "role": "teacher"
+    }
+}

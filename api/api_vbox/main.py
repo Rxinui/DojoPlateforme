@@ -1,37 +1,48 @@
 """API vbox powered with Python and FastAPI.
 
 @author Rxinui
-@date 21/01/2022
+@date 2022-01-21
 @see https://www.virtualbox.org/manual/ch08.html
 """
 
+import json
 import subprocess
-import logging
 from typing import List, Optional, Union, Tuple, Any
-from pydantic import BaseModel
+from models import BasicResponse, BasicError
 from fastapi import FastAPI, Query, status, HTTPException
-from vboxmanage import VBoxManageBuilder, VBoxManageListParser
+from fastapi.responses import JSONResponse
+from fastapi.openapi.utils import get_openapi
+from openapi import api_vbox_openapi
+from vboxmanage import VBoxManageBuilder
+from lib import get_logger, DEBUG
 
-logging.basicConfig(
-    filename="./api_vbox.log",
-    encoding="utf-8",
-    level=logging.DEBUG,
-    format="%(asctime)s::%(name)s::%(levelname)s::%(message)s",
-    datefmt="%Y-%m-%dT%H:%M:%S",
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, f"{__file__}.log", level=DEBUG)
 app = FastAPI()
 
+# TODO implement a Token Bearer check before executing request
+# TODO return correct 4XX HTTP response
 
-class BasicResponse(BaseModel):
-    """
-    API response model
 
-    msg: message to describe a response
-    items: data to submit with the response
+def _openapi():
+    """Update openAPI with custom values stored in openapi/.
+
+    Returns:
+        Dict[str,Any]: openAPI schema
     """
-    msg: str = ...
-    items: dict = {}
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="API vbox",
+        version="0.1",
+        description="OpenAPI of API vbox",
+        servers=[{"url": "https://localhost:8000/", "description": "API dev server"}],
+        routes=app.routes,
+    )
+    app.openapi_schema = api_vbox_openapi(openapi_schema)
+    return app.openapi_schema
+
+
+app.openapi = _openapi
 
 
 def _execute_cmd(cmd: List[str]) -> str:
@@ -49,17 +60,34 @@ def _execute_cmd(cmd: List[str]) -> str:
         return proc.communicate()[0].decode("utf-8")
 
 
-@app.get("/vbox", response_model=BasicResponse, status_code=status.HTTP_202_ACCEPTED)
+@app.get(
+    "/vbox",
+    response_model=BasicResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"model": BasicError},
+        status.HTTP_401_UNAUTHORIZED: {"model": BasicError},
+        status.HTTP_403_FORBIDDEN: {"model": BasicError},
+        status.HTTP_404_NOT_FOUND: {"model": BasicError},
+        status.HTTP_406_NOT_ACCEPTABLE: {"model": BasicError},
+        status.HTTP_429_TOO_MANY_REQUESTS: {"model": BasicError},
+    },
+)
 async def vbox_manage_list(
-    query: Optional[List[str]] = Query([]),
+    q: str = Query(
+        ...,
+        regex=VBoxManageBuilder.list().parser.get_directives_regex(),
+        max_length=98,
+        min_length=3
+    ),
     sort: Optional[bool] = False,
     long: Optional[bool] = False,
 ):
     """
-    Apply `VBoxManage list <directive>` according to {list} query parameter.
+    Apply `VBoxManage list <directive>` according to {list} q parameter.
 
     Args:
-        list (Optional[Query[List[str]]]): query to list
+        list (Optional[Query[List[str]]]): q to list
 
     Returns:
         (BasicResponse): /vbox result
@@ -89,7 +117,7 @@ async def vbox_manage_list(
         directive: str, **kwargs
     ) -> Tuple[Union[None, str], Any]:
         """
-        Process a directive passed by query and parse the result.
+        Process a directive passed by q and parse the result.
 
         Looks up the directive sent if exist then execute it.
         The following output will be parsed and return.
@@ -98,15 +126,21 @@ async def vbox_manage_list(
         if not cmd:
             return None, "Incorrect list directive."
         output = _execute_cmd(cmd)
-        f_parse = getattr(VBoxManageListParser, f"parse_{directive}")
+        f_parse = getattr(VBoxManageBuilder.list().parser, f"parse_{directive}")
         res = f_parse(output, kwargs["long"])
         return directive, res
 
+    if not q:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=dict(BasicError(msg="Missing query.")),
+        )
     items = {}
     items["sort"] = sort
     items["long"] = long
     logger.info("%s sort=%s long=%s.", app.url_path_for("vbox_manage_list"), sort, long)
-    for directive in query:
+    q = q.split(",")
+    for directive in q:
         valid_directive, parsed = process_list_directive(
             directive, sort=sort, long=long
         )
@@ -117,17 +151,10 @@ async def vbox_manage_list(
     return BasicResponse(msg="/vbox", items=items)
 
 
-@app.get("/vbox/{id_vbox}")
-async def get_vbox_by_id(id_vbox: str):
+@app.on_event("shutdown")
+def shutdown_event():
     """
-    Apply `VBoxManage showvminfo`.
-
-    Args:
-        id_vbox (str): vm id
-
-    Returns:
-        (BasicResponse): vm info
+    Save new openapi schema.
     """
-    if id_vbox == "1":
-        return {"message": f"/vbox/{id_vbox} OK"}
-    return
+    with open("./openapi/openapi.json", "w", encoding="utf-8") as fo:
+        json.dump(app.openapi(), fo, indent=2)

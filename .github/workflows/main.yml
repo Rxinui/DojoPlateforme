@@ -1,11 +1,11 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Python application
+name: API api_vbox [Python]
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, pfe9_ci_security_42crunch]
   pull_request:
     branches: [main, develop]
 
@@ -40,3 +40,16 @@ jobs:
       - name: Lint with pylint
         run: |
           find api/api_vbox/ -name '*.py' -exec pylint {} --rcfile $GITHUB_WORKSPACE/.pylintrc \;
+  rest-api-static-security-testing:
+    needs: call-commitlinter
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: 42Crunch REST API Static Security Testing
+        uses: 42Crunch/api-security-audit-action@96228d9c48873fe001354047d47fb62be42abeb1
+        with:
+          api-token: ${{ secrets.API_TOKEN_42CRUNCH }}
+          min-score: 75
+          upload-to-code-scanning: true
+
+
