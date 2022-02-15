@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+
+  dojo_db:
+    image: mariadb:10.6.5-focal
+    volumes:
+      - "./volume/initdb.d/:/docker-entrypoint-initdb.d/"
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_USER: root
+
+
