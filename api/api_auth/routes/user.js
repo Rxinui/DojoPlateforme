@@ -1,7 +1,8 @@
-const dbconnector = require('../plugins/dbconnector.mock')
+const dbconnector = require("../plugins/dbconnector")
 const statusCode = require('http-status-codes').StatusCodes
 const bcrypt = require('bcrypt');
 const saltRounds = 12;
+const _ = require('lodash');
 
 const success = (object) => Object.assign({ statusCode: statusCode.OK }, object)
 
@@ -22,10 +23,12 @@ async function routes(fastify, options) {
         }
     }
 
-    fastify.post('/user/login', options, (request, reply) => {
+    fastify.post('/user/login', options, async (request, reply) => {
         try {
-            let fetchedUser = dbconnector.getUserByEmail(request.body.email)
-            bcrypt.compare(request.body.password, fetchedUser.password).then(result => {
+            let fetchedUser = await dbconnector.getUserByEmail(request.body.email)
+            fetchedUser = fetchedUser[0]
+            console.log(fetchedUser)
+            bcrypt.compare(request.body.password, fetchedUser.hashPassword).then(result => {
                 if (result) {
                     reply.send(success({ message: "Authentication succesful" }))
                 } else {
@@ -37,19 +40,24 @@ async function routes(fastify, options) {
         }
     })
 
-    fastify.post('/user/new', options, (request, reply) => {
-        let hasUser = dbconnector.hasUserByEmail(request.body.email)
-        if (hasUser.response) {
-            reply.send(Error("email already used by a user"))
+    fastify.post('/user/new', options, async (request, reply) => {
+        try {
+            let hasUser = await dbconnector.hasUserByEmail(request.body.email)
+            if (hasUser.response) {
+                reply.send(Error("email already used by a user"))
+            } else {
+                bcrypt.hash(request.body.password, saltRounds).then(hash => {
+                    dbconnector.addNewUser(request.body.username, request.body.email, hash)
+                    reply.send(success({ message: `User '${request.body.username}' signed up successfully` }))
+                })
+            }
+        } catch (err) {
+            reply.send(err)
         }
-        bcrypt.hash(request.body.password, saltRounds).then(hash => {
-            dbconnector.addNewUser(request.body.username, request.body.email, hash)
-            reply.send(success({ message: `User '${request.body.username}' signed up successfully` }))
-        })
     })
 
     fastify.post('/user/logout', options, (request, reply) => {
-        reply.send(success({message: "Logout successfully"}))
+        reply.send(success({ message: "Logout successfully" }))
     })
 
 }
