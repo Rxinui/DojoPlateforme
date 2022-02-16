@@ -4,6 +4,8 @@ services:
 
   dojo_db:
     image: mariadb:10.6.5-focal
+    ports:
+      - 3306:3306
     volumes:
       - "./volume/initdb.d/:/docker-entrypoint-initdb.d/"
     restart: always
