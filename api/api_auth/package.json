@@ -1,14 +1,19 @@
 {
   "scripts": {
-    "start": "fastify start server.js"
+    "start": "node server.js",
+    "test": "mocha"
   },
+  "mocha": {},
   "dependencies": {
     "bcrypt": "^5.0.1",
     "dotenv": "^16.0.0",
     "fastify": "^3.27.1",
     "fastify-plugin": "^3.0.1",
     "http-status-codes": "^2.2.0",
-    "lodash": "^4.17.21",
     "mariadb": "^2.5.5"
+  },
+  "devDependencies": {
+    "axios": "^0.26.0",
+    "expect.js": "^0.3.1"
   }
 }
