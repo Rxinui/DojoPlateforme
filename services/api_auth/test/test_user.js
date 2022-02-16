@@ -1,7 +1,7 @@
 const statusCode = require('http-status-codes').StatusCodes
 const mariadb = require("mariadb");
 var expect = require('expect.js')
-require("dotenv").config({ path: "./.dev.env" });
+require("dotenv").config();
 
 const api = require('axios').create({
     baseURL: process.env.API_HOST_URL,
