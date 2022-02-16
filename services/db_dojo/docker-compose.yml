@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
 
-  dojo_db:
+  db:
     image: mariadb:10.6.5-focal
     ports:
       - 3306:3306

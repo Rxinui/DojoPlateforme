@@ -1,4 +1,4 @@
-USE dojo_db;
+USE dojo;
 
 INSERT INTO User (username,email,hashPassword)
 VALUES 
