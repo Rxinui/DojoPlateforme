@@ -22,6 +22,8 @@
             "required": true,
             "schema": {
               "title": "Q",
+              "maxLength": 98,
+              "minLength": 3,
               "pattern": "^((vms|runningvms|intnets|hostinfo|groups|systemproperties|bridgedifs|hostonlyifs|natnets|dhcpservers),?)+$",
               "type": "string"
             },
@@ -212,7 +214,8 @@
     "securitySchemes": {
       "apiAuth": {
         "type": "http",
-        "scheme": "bearer"
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   },

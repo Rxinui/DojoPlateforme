@@ -1,14 +1,14 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: API api_vbox [Python]
-
+name: Build and test services
 on:
   push:
-    branches: [main, develop, pfe9_ci_security_42crunch]
+    branches: [main, develop, pfe22_action_build_db]
   pull_request:
     branches: [main, develop]
-
+env:
+  DB_DOJO_VERSION: 0.1.1
 jobs:
   call-commitlinter:
     runs-on: ubuntu-20.04
@@ -19,7 +19,7 @@ jobs:
         with:
           commitTags: "new,fix,doc,ref,wip"
           commitIssueId: "PFE"
-  build-api-vbox:
+  build-api_vbox:
     needs: call-commitlinter
     runs-on: ubuntu-20.04
     steps:
@@ -51,5 +51,23 @@ jobs:
           api-token: ${{ secrets.API_TOKEN_42CRUNCH }}
           min-score: 75
           upload-to-code-scanning: true
-
-
+  build-db_dojo:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: services/db_dojo/
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/db_dojo:${{ env.DB_DOJO_VERSION }}
