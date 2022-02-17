@@ -1,7 +1,5 @@
 const mariadb = require("mariadb");
 
-console.log(process.env.API_DB_HOST)
-
 const pool = mariadb.createPool({
     host: process.env.API_DB_HOST,
     user: process.env.API_DB_USER,
