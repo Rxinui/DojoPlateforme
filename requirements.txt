@@ -4,5 +4,5 @@ black
 pylint
 pytest
 
-# api/api_vbox/ requirements
--r api/api_vbox/requirements.txt
+# services/api_vbox/ requirements
+-r services/api_vbox/requirements.txt

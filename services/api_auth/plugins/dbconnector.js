@@ -1,5 +1,6 @@
 const mariadb = require("mariadb");
-require("dotenv").config({ path: "./.dev.env" });
+
+console.log(process.env.API_DB_HOST)
 
 const pool = mariadb.createPool({
     host: process.env.API_DB_HOST,
@@ -22,7 +23,7 @@ const __getUserBy = async (query, ...args) => {
         console.log(`POOL_ID#${conn.threadId}`, args)
         return conn.query({sql: query}, args)
     } catch (err) {
-        throw er
+        throw err
     } finally {
         if (conn) conn.release()
     }

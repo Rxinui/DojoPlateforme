@@ -9,6 +9,7 @@
 
 # Ignore production files
 *.prod.*
+*.env
 
 # Ignore system/virtualbox/ dir that contains big files
 system/virtualbox/ovf/

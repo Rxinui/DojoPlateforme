@@ -1,14 +1,15 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: API api_vbox [Python]
-
+name: Build and test services
 on:
   push:
-    branches: [main, develop, pfe9_ci_security_42crunch]
+    branches: [main, develop]
   pull_request:
     branches: [main, develop]
-
+env:
+  DB_DOJO_VERSION: 0.1.1
+  NODE_ENV: development
 jobs:
   call-commitlinter:
     runs-on: ubuntu-20.04
@@ -19,7 +20,7 @@ jobs:
         with:
           commitTags: "new,fix,doc,ref,wip"
           commitIssueId: "PFE"
-  build-api-vbox:
+  build-api_vbox:
     needs: call-commitlinter
     runs-on: ubuntu-20.04
     steps:
@@ -33,13 +34,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install black pylint pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Test api/api_vbox/ with pytest
+      - name: Test services/api_vbox/ with pytest
         run: |
-          cd $GITHUB_WORKSPACE/api/api_vbox/ && pytest; 
+          cd $GITHUB_WORKSPACE/services/api_vbox/ && pytest;
           cd $GITHUB_WORKSPACE
       - name: Lint with pylint
         run: |
-          find api/api_vbox/ -name '*.py' -exec pylint {} --rcfile $GITHUB_WORKSPACE/.pylintrc \;
+          find services/api_vbox/ -name '*.py' -exec pylint {} --rcfile $GITHUB_WORKSPACE/.pylintrc \;
   rest-api-static-security-testing:
     needs: call-commitlinter
     runs-on: ubuntu-20.04
@@ -51,5 +52,61 @@ jobs:
           api-token: ${{ secrets.API_TOKEN_42CRUNCH }}
           min-score: 75
           upload-to-code-scanning: true
-
-
+  build-db_dojo:
+    needs: call-commitlinter
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: services/db_dojo/
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/db_dojo:${{ env.DB_DOJO_VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/db_dojo:latest
+  build-api_auth:
+    needs: build-db_dojo
+    runs-on: ubuntu-20.04
+    container:
+      image: node:lts-gallium
+      env:
+        NODE_ENV: ${{ env.NODE_ENV }}
+        API_HOST_URL: http://localhost:3000
+        API_DB_HOST: db_dojo
+        API_DB_USER: ${{ secrets.API_DB_DOJO_USER }}
+        API_DB_PASSWORD: ${{ secrets.API_DB_DOJO_PASSWORD }}
+        API_DB_DATABASE: dojo
+        API_DB_CONNECTION_LIMIT: 10
+    services:
+      db_dojo:
+        image: rxinui/db_dojo:latest
+        ports:
+          - 3306:3306
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: yes
+          MARIADB_USER: ${{ secrets.API_DB_DOJO_USER }}
+          MARIADB_PASSWORD: ${{ secrets.API_DB_DOJO_PASSWORD }}
+          MARIADB_DATABASE: dojo
+    defaults:
+      run:
+        working-directory: ./services/api_auth/
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Install node dependencies
+        run: npm i
+      - name: Run API server
+        run: npm run start &
+      - name: Run tests on API server
+        run: npm run test
