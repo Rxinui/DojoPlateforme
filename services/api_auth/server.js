@@ -1,18 +1,11 @@
 require("dotenv").config();
+const express = require('express')
+const routeUser = require('./routes/user')
+const port = 3000
+const app = express()
 
-const fastify = require('fastify')({
-  logger: true
+app.use('/user/',routeUser)
+
+app.listen(port, () => {
+    console.log(`> Go to the dojo http://localhost:${port}`)
 })
-
-fastify.register(require('./routes/user'))
-fastify.register(require('./routes/token'))
-
-const start = async () => {
-  try {
-    await fastify.listen(3000)
-  } catch (err) {
-    fastify.log.error(err)
-    process.exit(1)
-  }
-}
-start()

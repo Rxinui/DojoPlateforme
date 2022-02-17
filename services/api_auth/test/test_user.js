@@ -51,14 +51,14 @@ describe('API /user/', function () {
 
         it('POST register new user', async function () {
             let response = await api(apiOptions)
-            expect(response.data.statusCode).to.be(statusCode.OK)
+            expect(response.status).to.be(statusCode.OK)
         });
 
         it('POST register registered user (fail)', async function () {
             try {
                 await api(apiOptions)
             } catch (err) {
-                expect(err.response.data.statusCode).to.be(statusCode.INTERNAL_SERVER_ERROR)
+                expect(err.response.status).to.be(statusCode.INTERNAL_SERVER_ERROR)
             }
         });
 
@@ -75,7 +75,15 @@ describe('API /user/', function () {
 
         it('POST login test user', async function () {
             let response = await api(apiOptions)
-            expect(response.data.statusCode).to.be(statusCode.OK)
+            expect(response.status).to.be(statusCode.OK)
+        });
+
+        it('POST login incorrect test user (fail)', async function () {
+            try {
+                await api(apiOptions)
+            } catch (err) {
+                expect(err.response.status).to.be(statusCode.INTERNAL_SERVER_ERROR)
+            }
         });
 
     })
