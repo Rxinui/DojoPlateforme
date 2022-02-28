@@ -7,6 +7,9 @@ Install required linux dependencies.
 
 Dependencies: (Please keep this list update)
 - VBoxManage: VirtualBox CLI to manage .ova file
+
+CI/CD GitHub Action:
+- linux-headers-azure: required to use VBoxManage on GitHub runners
 """
 echo -- Install linux dependencies --
 echo + Install utils dependencies

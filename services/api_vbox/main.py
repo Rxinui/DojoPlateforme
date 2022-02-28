@@ -10,9 +10,12 @@ import subprocess
 from typing import List, Optional, Union, Tuple, Any
 from models import BasicResponse, BasicError
 from fastapi import FastAPI, Query, status, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from openapi import api_vbox_openapi
+
 from vboxmanage import VBoxManageBuilder
 from lib import get_logger, DEBUG
 
@@ -20,7 +23,6 @@ logger = get_logger(__name__, f"{__file__}.log", level=DEBUG)
 app = FastAPI()
 
 # TODO implement a Token Bearer check before executing request
-# TODO return correct 4XX HTTP response
 
 
 def _openapi():
@@ -45,6 +47,31 @@ def _openapi():
 app.openapi = _openapi
 
 
+@app.exception_handler(StarletteHTTPException)
+async def __http_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=BasicError(
+            code="BAD_HTTP_VALIDATION",
+            msg="HTTP Error",
+            details=str(exc.detail),
+        ).__dict__,
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def __validation_exception_handler(request, exc):
+    """Validation exception handler"""
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content=BasicError(
+            code="BAD_REQUEST_VALIDATION",
+            msg="Error during HTTP arguments validation",
+            details=exc.errors(),
+        ).__dict__,
+    )
+
+
 def _execute_cmd(cmd: List[str]) -> str:
     """Execute a shell command.
 
@@ -54,14 +81,13 @@ def _execute_cmd(cmd: List[str]) -> str:
     Returns:
         str: command output
     """
-    # see also: check_output()
-    # return subprocess.check_output(cmd).decode("utf-8")
+    # see also: subprocess.check_output(cmd).decode("utf-8")
     with subprocess.Popen(cmd, stdout=subprocess.PIPE) as proc:
         return proc.communicate()[0].decode("utf-8")
 
 
 @app.get(
-    "/vbox",
+    "/list",
     response_model=BasicResponse,
     status_code=status.HTTP_202_ACCEPTED,
     responses={
@@ -78,7 +104,7 @@ async def vbox_manage_list(
         ...,
         regex=VBoxManageBuilder.list().parser.get_directives_regex(),
         max_length=98,
-        min_length=3
+        min_length=3,
     ),
     sort: Optional[bool] = False,
     long: Optional[bool] = False,
@@ -90,7 +116,7 @@ async def vbox_manage_list(
         list (Optional[Query[List[str]]]): q to list
 
     Returns:
-        (BasicResponse): /vbox result
+        (BasicResponse): /list result
     """
 
     def get_list_directive_cmd(directive: str, **kwargs) -> Union[None, str]:
@@ -131,9 +157,12 @@ async def vbox_manage_list(
         return directive, res
 
     if not q:
-        return JSONResponse(
+        raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            content=dict(BasicError(msg="Missing query.")),
+            detail={
+                "code": "MISSING_LIST_QUERY",
+                "msg": "Missing query to directive list.",
+            },
         )
     items = {}
     items["sort"] = sort
@@ -148,7 +177,7 @@ async def vbox_manage_list(
         logger.info(
             "%s directive=%s parsed.", app.url_path_for("vbox_manage_list"), directive
         )
-    return BasicResponse(msg="/vbox", items=items)
+    return BasicResponse(msg="/list", items=items)
 
 
 @app.on_event("shutdown")
