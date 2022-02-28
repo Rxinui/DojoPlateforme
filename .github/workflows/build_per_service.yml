@@ -1,12 +1,9 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
-name: Build and test services
+name: Build and test services independently
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 env:
   DB_DOJO_VERSION: 0.1.1
   NODE_ENV: development
@@ -16,13 +13,25 @@ jobs:
     steps:
       - name: Lint branch newest commit format
         id: lintResult
-        uses: Rxinui/commitlinter@v1.1
+        uses: Rxinui/commitlinter@main
         with:
           commitTags: "new,fix,doc,ref,wip"
           commitIssueId: "PFE"
-  build-api_vbox:
+  api_vbox-static-security:
     needs: call-commitlinter
     runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: 42Crunch REST API Static Security Testing
+        uses: 42Crunch/api-security-audit-action@96228d9c48873fe001354047d47fb62be42abeb1
+        with:
+          api-token: ${{ secrets.API_TOKEN_42CRUNCH }}
+          min-score: 75
+          upload-to-code-scanning: true
+  build-api_vbox:
+    needs: api_vbox-static-security
+    runs-on: ubuntu-20.04
+    container: python:3.9
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.9
@@ -41,17 +50,6 @@ jobs:
       - name: Lint with pylint
         run: |
           find services/api_vbox/ -name '*.py' -exec pylint {} --rcfile $GITHUB_WORKSPACE/.pylintrc \;
-  rest-api-static-security-testing:
-    needs: call-commitlinter
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - name: 42Crunch REST API Static Security Testing
-        uses: 42Crunch/api-security-audit-action@96228d9c48873fe001354047d47fb62be42abeb1
-        with:
-          api-token: ${{ secrets.API_TOKEN_42CRUNCH }}
-          min-score: 75
-          upload-to-code-scanning: true
   build-db_dojo:
     needs: call-commitlinter
     runs-on: ubuntu-20.04
