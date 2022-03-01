@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+  api:
+    image: rxinui/api_vbox:latest
+    build:
+      context: .
+    environment:
+      API_VBOX_HOST: 0.0.0.0
+      API_VBOX_PORT: 8080
+    ports:
+      - 9000:8080
+    

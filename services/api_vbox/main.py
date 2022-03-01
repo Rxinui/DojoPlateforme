@@ -24,7 +24,6 @@ app = FastAPI()
 
 # TODO implement a Token Bearer check before executing request
 
-
 def _openapi():
     """Update openAPI with custom values stored in openapi/.
 

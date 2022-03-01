@@ -1,6 +1,7 @@
 #!/bin/bash
 
-"""
+usage () {
+cat << EOF
 Script to run suitable command during development phase.
 
 @author Rxinui
@@ -10,7 +11,8 @@ Commands: (Please keep this update)
 - docker: build an image and create an instance of it
 - docker rm: remove container instance and its image
 - uvicorn: run API webserver in development mode
-"""
+EOF
+}
 
 trap kill_web_server SIGHUP SIGINT SIGKILL
 source ./.env
@@ -39,7 +41,7 @@ then
     then
         sudo docker rm -f $api_container && sudo docker image rm $api_image_tag
     else
-        sudo docker build -t $api_image_tag . && sudo docker run -d --name $api_container -p $api_localport:80 $api_image_tag 
+        sudo docker build --rm -t $api_image_tag . && sudo docker run -d --name $api_container -p $api_localport:80 $api_image_tag 
     fi
 elif [[ $1 == "uvicorn" ]]
 then
