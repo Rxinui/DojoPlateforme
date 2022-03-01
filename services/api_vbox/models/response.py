@@ -4,6 +4,7 @@
 @date 2022-02-02
 @see https://fastapi.tiangolo.com/
 """
+from typing import Any
 from pydantic import BaseModel
 
 
@@ -27,3 +28,5 @@ class BasicError(BaseModel):
     """
 
     msg: str = ...
+    code: str = ...
+    details: Any

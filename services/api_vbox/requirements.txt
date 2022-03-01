@@ -3,3 +3,5 @@ pydantic
 uvicorn
 python-jose[cryptography]
 passlib[bcrypt]
+requests
+python-dotenv

@@ -1,6 +1,4 @@
 from vboxmanage import VBoxManageList, VBoxManageListParser
-import csv
-
 class TestVBoxManageList:
     def setup_method(self):
         self.list = VBoxManageList()
@@ -69,7 +67,7 @@ class TestVBoxManageListParser:
 
     def test_parse_long_vms(self):
         expected = None
-        with open("tests/data/test_parse_long_vms.txt", encoding="utf-8") as fp:
+        with open("test/data/test_parse_long_vms.txt", encoding="utf-8") as fp:
             expected = self.parser.parse_vms(fp.read(), long=True)
         assert expected
         assert len(expected) == 2  # 2 vms
@@ -107,7 +105,7 @@ class TestVBoxManageListParser:
 
     def test_parse_hostinfo(self):
         expected = None
-        with open("tests/data/test_parse_hostinfo.txt", encoding="utf-8") as fp:
+        with open("test/data/test_parse_hostinfo.txt", encoding="utf-8") as fp:
             expected = self.parser.parse_hostinfo(fp.read())
         assert expected
         assert (

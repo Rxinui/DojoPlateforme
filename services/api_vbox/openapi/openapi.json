@@ -12,11 +12,11 @@
     }
   ],
   "paths": {
-    "/vbox": {
+    "/list": {
       "get": {
         "summary": "Vbox Manage List",
-        "description": "Apply `VBoxManage list <directive>` according to {list} q parameter.\n\nArgs:\n    list (Optional[Query[List[str]]]): q to list\n\nReturns:\n    (BasicResponse): /vbox result",
-        "operationId": "vbox_manage_list_vbox_get",
+        "description": "Apply `VBoxManage list <directive>` according to {list} q parameter.\n\nArgs:\n    list (Optional[Query[List[str]]]): q to list\n\nReturns:\n    (BasicResponse): /list result",
+        "operationId": "vbox_manage_list_list_get",
         "parameters": [
           {
             "required": true,
@@ -141,13 +141,21 @@
       "BasicError": {
         "title": "BasicError",
         "required": [
-          "msg"
+          "msg",
+          "code"
         ],
         "type": "object",
         "properties": {
           "msg": {
             "title": "Msg",
             "type": "string"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "details": {
+            "title": "Details"
           }
         },
         "description": "API error response model\n\nmsg: message to describe a response"

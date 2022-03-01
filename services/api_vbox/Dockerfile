@@ -2,8 +2,11 @@ FROM python:3.9
 
 WORKDIR /app
 
-COPY requirements.txt /app/
-RUN python -m pip install --no-cache-dir --upgrade -r /app/requirements.txt
-COPY main.py /app/
+COPY ./ /app/
+RUN python -m pip install pip --upgrade && \
+    python -m pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
-CMD ["python","-m","uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+ENV API_VBOX_HOST 0.0.0.0
+ENV API_VBOX_PORT 80
+
+CMD ["bash","-c", "uvicorn main:app --port $API_VBOX_PORT --host $API_VBOX_HOST"]
