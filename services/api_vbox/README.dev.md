@@ -17,10 +17,15 @@ This API is a wrapper of `VBoxManage` command-line. Therefore, VirtualBox 6.1 pa
     - `container`: implies that API Vbox is running on a container (ie. Docker). The docker image is built on `python:3.9` image and does not have any way to install `VBoxManage` on the container. All the `VBoxManage` command will be redirected to the host machine and will expect a reply with the following output. The output will be transfer to the client by the API
 
 Example:
-```
+
+```ini
 API_VBOX_HOST="127.0.0.1"
 API_VBOX_PORT="8080"
 API_VBOX_EXECMODE="container"
+# RabbitMQ broker variables
+API_VBOX_RABBITMQ_HOST="0.0.0.0"
+API_VBOX_RABBITMQ_PORT="5672"
+API_VBOX_USERS_REQUEST_QUEUE="api_vbox.users.request_queue"
 ```
 
 ## FastAPI

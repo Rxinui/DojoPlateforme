@@ -6,6 +6,8 @@
 import os
 import sys
 import json
+import subprocess
+from typing import List
 import pika
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic, BasicProperties
@@ -17,7 +19,20 @@ logger = get_logger(__file__, f"{__file__}.log", level=INFO)
 USERS_REQUEST_QUEUE = os.environ["API_VBOX_USERS_REQUEST_QUEUE"]
 
 
-def __on_request(
+def _execute_cmd(cmd: List[str]) -> str:
+    """Execute a shell command.
+
+    Args:
+        cmd (List[str]): command
+
+    Returns:
+        str: command output
+    """
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE) as proc:
+        return proc.communicate()[0].decode("utf-8")
+
+
+def on_request(
     ch: BlockingChannel,
     method: Basic.Deliver,
     props: BasicProperties,
@@ -26,20 +41,22 @@ def __on_request(
     """Callback triggered on request from the api_vbox's user.
 
     Args:
-        ch (_type_): _description_
-        method (_type_): _description_
-        props (_type_): _description_
-        body (_type_): _description_
+        ch (BlockingChannel): _description_
+        method (Basic.Deliver): _description_
+        props (BasicProperties): _description_
+        body (bytes): _description_
     """
     response = json.loads(body)
-    logger.info("on_request@user#%s", response["client_id"])
-    logger.info("debug: %s", type(ch))
-    response["res"] = "Success!!"
+    logger.info("on_request@user#%s: exec '%s'", response["client_id"], response["req"])
+    response["res"] = {}
+    response["res"]["output"] = _execute_cmd(response["req"]["cmd"])
     ch.basic_publish(
         exchange="",
         routing_key=props.reply_to,  # REPLY_QUEUE defined by Client
         properties=pika.BasicProperties(
-            correlation_id=props.correlation_id, content_type="application/json"
+            correlation_id=props.correlation_id,
+            content_type="application/json",
+            content_encoding="utf-8",
         ),
         body=json.dumps(response),
     )
@@ -55,13 +72,13 @@ if __name__ == "__main__":
     logger.info("main: connection established")
     channel = connection.channel()
     channel.queue_declare(queue=USERS_REQUEST_QUEUE)
-    logger.info(
-        "on_channel_open: channel %s declared and ready to consume", USERS_REQUEST_QUEUE
-    )
+    logger.info("main: channel %s declared and ready to consume", USERS_REQUEST_QUEUE)
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(queue=USERS_REQUEST_QUEUE, on_message_callback=__on_request)
+    channel.basic_consume(queue=USERS_REQUEST_QUEUE, on_message_callback=on_request)
     try:
-        print("Waiting for messages. Press Ctrl+C to exit...")
+        print(
+            f"Waiting for messages on {USERS_REQUEST_QUEUE}. Press Ctrl+C to exit...\r"
+        )
         channel.start_consuming()
     except KeyboardInterrupt:
         if connection.is_open:
