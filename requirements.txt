@@ -3,6 +3,8 @@ paramiko
 black
 pylint
 pytest
+python-dotenv
 
 # services/api_vbox/ requirements
 -r services/api_vbox/requirements.txt
+-r system/api_vbox/requirements.txt
