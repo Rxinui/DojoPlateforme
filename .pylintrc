@@ -88,7 +88,9 @@ disable=raw-checker-failed,
         use-symbolic-message-instead,
         unused-argument, # to ignore design pattern
         attribute-defined-outside-init, # to ignore pytest.setup_method(self)
-        too-few-public-methods
+        too-few-public-methods,
+        #wrong-import-position # to ignore when dotenv.load_dotenv() is called at the beginning
+        
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
@@ -296,7 +298,7 @@ attr-naming-style=snake_case
 
 # Regular expression matching correct attribute names. Overrides attr-naming-
 # style.
-#attr-rgx=
+attr-rgx=^_{0,2}[a-z0-9]+(?:_[a-z0-9]+)*$
 
 # Bad variable names which should always be refused, separated by a comma.
 bad-names=foo,
@@ -371,7 +373,7 @@ method-naming-style=snake_case
 
 # Regular expression matching correct method names. Overrides method-naming-
 # style.
-#method-rgx=
+method-rgx=^_{0,2}[a-z0-9]+(?:_[a-z0-9]+)*_{0,2}$
 
 # Naming style matching correct module names.
 module-naming-style=snake_case

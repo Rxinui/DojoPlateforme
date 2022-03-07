@@ -1,0 +1,7 @@
+version: '3.8'
+services:
+  rabbitmq:
+    image: rabbitmq:3.9.13
+    restart: always
+    ports:
+      - ${RABBITMQ_PORT}:5672

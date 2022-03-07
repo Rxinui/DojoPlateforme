@@ -5,25 +5,32 @@
 @see https://www.virtualbox.org/manual/ch08.html
 """
 
+import os
 import json
 import subprocess
+import uuid
 from typing import List, Optional, Union, Tuple, Any
 from models import BasicResponse, BasicError
-from fastapi import FastAPI, Query, status, HTTPException
+from fastapi import FastAPI, Query, status, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from openapi import api_vbox_openapi
-
+from dotenv import load_dotenv
+from rabbitmq.rpc import RPCClient
 from vboxmanage import VBoxManageBuilder
 from lib import get_logger, DEBUG
 
+load_dotenv()
+
+EXECMODE_CONTAINER = "container"
+EXECMODE_LOCAL = "local"
 logger = get_logger(__name__, f"{__file__}.log", level=DEBUG)
 app = FastAPI()
+app_users = {}
 
 # TODO implement a Token Bearer check before executing request
-
 def _openapi():
     """Update openAPI with custom values stored in openapi/.
 
@@ -44,6 +51,37 @@ def _openapi():
 
 
 app.openapi = _openapi
+
+
+def _get_user_rpc_client(user: Any) -> Union[str, RPCClient]:
+    if isinstance(user, Request):
+        return app_users[user.client.host].get("rpc")
+    raise ValueError("Incorrect user within main.app")
+
+
+def _get_user_id(user: Any) -> Union[str, None]:
+    if isinstance(user, Request):
+        return app_users[user.client.host].get("user_id")
+    raise ValueError("Incorrect user within main.app")
+
+
+def _set_user_rpc_client(user: Any):
+    if isinstance(user, Request):
+        data = app_users.setdefault(user.client.host, {})
+        if not data.get("rpc"):
+            data["rpc"] = RPCClient(
+                _get_user_id(user), os.getenv("API_VBOX_USERS_REQUEST_QUEUE")
+            )
+        return data["rpc"]
+    raise ValueError("Incorrect user within main.app")
+
+
+def _set_user_id(user: Any):
+    if isinstance(user, Request):
+        if user.client.host not in app_users:
+            app_users[user.client.host] = {"user_id": str(uuid.uuid4())}
+    else:
+        raise ValueError("Incorrect user within main.app")
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -71,7 +109,7 @@ async def __validation_exception_handler(request, exc):
     )
 
 
-def _execute_cmd(cmd: List[str]) -> str:
+def _execute_cmd(user: Request, cmd: List[str]) -> str:
     """Execute a shell command.
 
     Args:
@@ -81,8 +119,18 @@ def _execute_cmd(cmd: List[str]) -> str:
         str: command output
     """
     # see also: subprocess.check_output(cmd).decode("utf-8")
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE) as proc:
-        return proc.communicate()[0].decode("utf-8")
+    if os.environ["API_VBOX_EXECMODE"] == EXECMODE_CONTAINER:
+        _set_user_rpc_client(user)
+        rpc = _get_user_rpc_client(user)
+        response = rpc.send_request({"cmd": cmd})
+        output = response["res"]["output"]
+    elif os.environ["API_VBOX_EXECMODE"] == EXECMODE_LOCAL:
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE) as proc:
+            output = proc.communicate()[0].decode("utf-8")
+    else:
+        raise EnvironmentError("API_VBOX_EXECMODE env variable is missing.")
+    print("debug:", app_users)
+    return output
 
 
 @app.get(
@@ -99,6 +147,7 @@ def _execute_cmd(cmd: List[str]) -> str:
     },
 )
 async def vbox_manage_list(
+    request: Request,
     q: str = Query(
         ...,
         regex=VBoxManageBuilder.list().parser.get_directives_regex(),
@@ -150,7 +199,7 @@ async def vbox_manage_list(
         cmd = get_list_directive_cmd(directive, **kwargs)
         if not cmd:
             return None, "Incorrect list directive."
-        output = _execute_cmd(cmd)
+        output = _execute_cmd(request, cmd)
         f_parse = getattr(VBoxManageBuilder.list().parser, f"parse_{directive}")
         res = f_parse(output, kwargs["long"])
         return directive, res
@@ -163,6 +212,8 @@ async def vbox_manage_list(
                 "msg": "Missing query to directive list.",
             },
         )
+
+    _set_user_id(request)
     items = {}
     items["sort"] = sort
     items["long"] = long
