@@ -1,0 +1,45 @@
+version: "3.8"
+services:
+  db_dojo:
+    image: rxinui/db_dojo:latest
+    build:
+      context: ./services/db_dojo/
+    ports:
+      - 3306:3306
+    networks:
+      intdojonet:
+        ipv4_address: 172.20.0.1
+  rabbitmq:
+    image: rxinui/rabbitmq:latest
+    build:
+      context: services/rabbitmq/
+    ports:
+      - 5672:5672
+    networks:
+      intdojonet:
+        ipv4_address: 172.20.0.2
+  api_auth:
+    image: rxinui/api_auth:latest
+    build:
+      context: ./services/api_auth/
+    ports:
+      - 8000:80
+    networks:
+      intdojonet:
+        ipv4_address: 172.20.0.11
+  api_vbox:
+    image: rxinui/api_vbox:latest
+    build:
+      context: ./services/api_vbox/
+    ports:
+      - 8001:80
+    networks:
+      intdojonet:
+        ipv4_address: 172.20.0.12
+networks:
+  intdojonet:
+    name: intdojonet
+    ipam:
+      driver: bridge
+      config:
+       - subnet: "172.20.0.0/27" # API global internal network - dev
