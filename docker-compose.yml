@@ -1,0 +1,69 @@
+version: "3.8"
+services:
+  db_dojo:
+    image: rxinui/db_dojo:latest
+    build:
+      context: ./services/db_dojo/
+    ports:
+      - 3306:3306
+    environment:
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: oui
+      MARIADB_USER: sifu
+      MARIADB_PASSWORD: sifu
+      MARIADB_DATABASE: dojo
+    networks:
+      intdojonet:
+        ipv4_address: 172.20.0.2
+  rabbitmq:
+    image: rabbitmq:3.9.13
+    ports:
+      - 5672:5672
+    networks:
+      intdojonet:
+        ipv4_address: 172.20.0.3
+  api_auth:
+    depends_on:
+      - db_dojo
+    image: rxinui/api_auth:latest
+    build:
+      context: ./services/api_auth/
+    ports:
+      - 8000:80
+    environment:
+      API_AUTH_HOST: 172.20.0.11
+      API_AUTH_PORT: 80
+      API_DB_HOST: 172.20.0.2
+      API_DB_USER: sifu
+      API_DB_PASSWORD: sifu
+      API_DB_DATABASE: dojo
+      API_DB_CONNECTION_LIMIT: 10
+    
+    networks:
+      intdojonet:
+        ipv4_address: 172.20.0.11
+  api_vbox:
+    depends_on:
+      - db_dojo
+      - rabbitmq
+    image: rxinui/api_vbox:latest
+    build:
+      context: ./services/api_vbox/
+    ports:
+      - 8001:80
+    environment:
+      API_VBOX_HOST: 172.20.0.12
+      API_VBOX_PORT: 80
+      API_VBOX_EXECMODE: container
+      API_VBOX_RABBITMQ_HOST: 172.20.0.3
+      API_VBOX_RABBITMQ_PORT: 5672
+      API_VBOX_USERS_REQUEST_QUEUE: api_vbox.users.request_queue
+    networks:
+      intdojonet:
+        ipv4_address: 172.20.0.12
+networks:
+  intdojonet:
+    name: intdojonet
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.20.0.0/26" # API global internal network - dev

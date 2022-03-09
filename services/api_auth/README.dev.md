@@ -17,10 +17,11 @@ npm i
 Create a `.env` file
 
 ```shell
-API_HOST_URL="http://localhost:3000"
+API_AUTH_HOST="localhost"
+API_AUTH_PORT="80"
 API_DB_HOST="0.0.0.0"
-API_DB_USER="root"
-API_DB_PASSWORD="root"
+API_DB_USER="sifu"
+API_DB_PASSWORD="sifu"
 API_DB_DATABASE="dojo"
 API_DB_CONNECTION_LIMIT=10
 ```
