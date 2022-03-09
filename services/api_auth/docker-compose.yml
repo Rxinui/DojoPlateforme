@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: rxinui/db_dojo:latest
+    ports:
+      - 3306:3306
+    volumes:
+      - "../db_dojo/volume/initdb.d/:/docker-entrypoint-initdb.d/"
+    restart: always
+    environment:
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: oui
+      MARIADB_USER: sifu
+      MARIADB_PASSWORD: sifu
+      MARIADB_DATABASE: dojo
+    networks:
+      devnet:
+        ipv4_address: 172.20.0.101
+
+  api_auth:
+    depends_on: 
+    - db
+    image: rxinui/api_auth:latest
+    build:
+      context: ./
+    ports:
+      - 8000:${API_AUTH_PORT}
+    environment:
+      API_DB_HOST: "172.20.0.101"
+    networks:
+      devnet:
+        ipv4_address: 172.20.0.102
+networks:
+  devnet:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.20.0.0/24" # API global internal network - dev

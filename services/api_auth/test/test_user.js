@@ -4,7 +4,7 @@ var expect = require('expect.js')
 require("dotenv").config();
 
 const api = require('axios').create({
-    baseURL: process.env.API_HOST_URL,
+    baseURL: `http://${process.env.API_AUTH_HOST}:${process.env.API_AUTH_PORT}`,
     timeout: 1000,
     headers: { "Content-Type": "application/json" }
 })
