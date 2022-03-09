@@ -21,6 +21,7 @@ const __getUserBy = async (query, ...args) => {
         console.log(`POOL_ID#${conn.threadId}`, args)
         return conn.query({sql: query}, args)
     } catch (err) {
+        console.error(err)
         throw err
     } finally {
         if (conn) conn.release()
@@ -50,5 +51,8 @@ module.exports = {
         } finally {
             if (conn) conn.release()
         }
+    },
+    getConnectionPool: async function() {
+        return await pool;
     }
 };

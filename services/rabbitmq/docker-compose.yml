@@ -5,3 +5,6 @@ services:
     restart: always
     ports:
       - ${RABBITMQ_PORT}:5672
+    environment:
+      - RABBITMQ_HOST="0.0.0.0"
+      - RABBITMQ_PORT="5672"

@@ -1,13 +1,16 @@
 const statusCode = require('http-status-codes').StatusCodes
-const mariadb = require("mariadb");
-var expect = require('expect.js')
+const mariadb = require("mariadb")
+const axios = require('axios')
+let expect = require('expect.js')
 require("dotenv").config();
 
-const api = require('axios').create({
-    baseURL: `http://${process.env.API_AUTH_HOST}:${process.env.API_AUTH_PORT}`,
-    timeout: 1000,
-    headers: { "Content-Type": "application/json" }
-})
+axios.defaults.withCredentials = true
+axios.defaults.baseURL = `http://${process.env.API_AUTH_HOST}:${process.env.API_AUTH_PORT}`
+axios.defaults.headers.post['Content-Type'] - "application/json"
+axios.defaults.timeout = 1000
+
+
+const EXPLICIT_FAILURE = "EXPLICIT_FAILURE"
 
 describe('API /user/', function () {
 
@@ -31,7 +34,7 @@ describe('API /user/', function () {
                     namedPlaceholders: true
                 }
             )
-            conn.query("DELETE FROM User WHERE email=:email", { email: userTest.email })
+            conn.query("DELETE FROM User WHERE email LIKE :email", { email: "%@dojotest.dev" })
         } catch (err) {
             console.error(err)
         }
@@ -50,13 +53,14 @@ describe('API /user/', function () {
         }
 
         it('POST register new user', async function () {
-            let response = await api(apiOptions)
+            let response = await axios(apiOptions)
             expect(response.status).to.be(statusCode.OK)
         });
 
         it('POST register registered user (fail)', async function () {
             try {
-                await api(apiOptions)
+                await axios(apiOptions)
+                expect().fail(EXPLICIT_FAILURE)
             } catch (err) {
                 expect(err.response.status).to.be(statusCode.INTERNAL_SERVER_ERROR)
             }
@@ -74,13 +78,18 @@ describe('API /user/', function () {
         }
 
         it('POST login test user', async function () {
-            let response = await api(apiOptions)
+            let response = await axios(apiOptions)
             expect(response.status).to.be(statusCode.OK)
         });
 
         it('POST login incorrect test user (fail)', async function () {
             try {
-                await api(apiOptions)
+                apiOptions.data = {
+                    username: "testDojoUnexistentUser",
+                    email: "test.unexistent.user@dojotest.dev",
+                    password: "testDojoFakePasswd"
+                }
+                let res = await axios(apiOptions)
             } catch (err) {
                 expect(err.response.status).to.be(statusCode.INTERNAL_SERVER_ERROR)
             }
@@ -98,10 +107,50 @@ describe('API /user/', function () {
         }
 
         it('POST logout test user', async function () {
-            let response = await api(apiOptions)
-            expect(response.data.statusCode).to.be(statusCode.OK)
+            let response = await axios(apiOptions)
+            expect(response.status).to.be(statusCode.OK)
         });
 
     })
+
+    describe('API Session test', function () {
+
+        const apiOptions = {
+            url: null,
+            method: null,
+            responseType: "json",
+            data: null,
+            withCredentials: true
+        }
+
+        it(' after creating a new account.', async function () {
+            apiOptions.url = "/user/new"
+            apiOptions.method = "post"
+            apiOptions.data = {
+                username: "testDojoSessionUser",
+                email: "test.session.user@dojotest.dev",
+                password: "testDojoSessionUserPasswd"
+            }
+            let response = await axios(apiOptions)
+            expect(response.status).to.be(statusCode.OK)
+            apiOptions.url = "/user/login"
+            response = await axios(apiOptions)
+            expect(response.status).to.be(statusCode.OK)
+            response = await axios.get("/user/profile",{
+                headers: {
+                    'set-cookie': response.headers['set-cookie']
+                }
+            })
+            console.log(response)
+
+            // apiOptions.headers = {'set-cookie': response.headers['set-cookie']}
+            // expect(response.status).to.be(statusCode.ACCEPTED)
+        })
+
+        // it(' after logged in to an account.')
+        // it(' session destroyed after logged out.')
+
+    })
+
 });
 

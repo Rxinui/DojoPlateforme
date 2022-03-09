@@ -29,3 +29,15 @@ CREATE TABLE IF NOT EXISTS ScopeAssignedToUser (
         ON DELETE CASCADE,
     PRIMARY KEY (userId,apiName,scopeValue)
 );
+
+CREATE TABLE IF NOT EXISTS Session(
+  sessionId VARCHAR(128) COLLATE utf8mb4_bin PRIMARY KEY NOT NULL,   
+  data MEDIUMTEXT COLLATE utf8mb4_bin DEFAULT '{}',
+  expires INT(11) UNSIGNED,
+  lastSeen DATETIME DEFAULT NOW(),
+  userId INT UNIQUE,
+  FOREIGN KEY (userId) 
+    REFERENCES User(userId)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
+);
