@@ -1,7 +1,6 @@
 const express = require('express')
 const session = require('express-session')
 const statusCode = require('http-status-codes').StatusCodes
-const { v4: uuidv4 } = require('uuid')
 const bcrypt = require('bcrypt');
 const dbconnector = require("../plugins/dbconnector")
 const router = express.Router()
@@ -12,9 +11,9 @@ const success = (msg, options) => Object.assign({ message: msg, statusCode: stat
 const error = (err, options) => Object.assign({ message: err.toString(), statusCode: statusCode.INTERNAL_SERVER_ERROR }, options)
 const toMillis = (s) => s * 1000;
 const IN_PROD = process.env.NODE_ENV === 'production'
-const SESSION_COOKIE_NAME = "cookie-name-dev"
+const SESSION_COOKIE_NAME = "api_auth.user.session"
 
-let sessionStore = new MySQLStore({
+const sessionStore = new MySQLStore({
     host: process.env.API_DB_HOST,
     user: process.env.API_DB_USER,
     password: process.env.API_DB_PASSWORD,
@@ -38,7 +37,7 @@ let sessionStore = new MySQLStore({
 router.use(express.json())
 router.use(session({
     key: SESSION_COOKIE_NAME,
-    secret: 'session_cookie_secret',
+    secret: process.env.API_AUTH_SESSION_SECRET,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -52,7 +51,7 @@ router.use(session({
 
 
 const onRequestProtected = function (request, reply, next) {
-    if (request.session) {
+    if (request.session.userId) {
         console.log("onRequestProtected: access granted.", request.session)
         return next();
     } else {
@@ -92,7 +91,6 @@ router.post('/login', onAuthentication, async (request, reply) => {
     }
 })
 
-
 router.get("/profile", onRequestProtected, async (request, reply) => {
     console.log("I can see that because I'm authenticated.")
     reply.status(statusCode.ACCEPTED).send(success("profile access granted."))
@@ -113,12 +111,14 @@ router.post('/new', async (request, reply) => {
     }
 })
 
-router.post('/logout', (request, reply) => {
+router.post('/logout', onRequestProtected, (request, reply) => {
     request.session.destroy(err => {
-        if (err)
+        if (err) {
+            console.error("logout:err:", err)
             reply.status(statusCode.INTERNAL_SERVER_ERROR).send(error(err))
+        }
         reply.clearCookie(SESSION_COOKIE_NAME)
-        reply.send(success({ message: "Logout successfully" }))
+        reply.status(statusCode.ACCEPTED).send(success({ message: "Logout successfully" }))
     })
 })
 

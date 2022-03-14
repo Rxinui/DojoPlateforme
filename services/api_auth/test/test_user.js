@@ -1,15 +1,15 @@
-const statusCode = require('http-status-codes').StatusCodes
-const mariadb = require("mariadb")
-const axios = require('axios')
-let expect = require('expect.js')
 require("dotenv").config();
+const mariadb = require("mariadb")
+const got = require('got');
+const statusCode = require('http-status-codes').StatusCodes
+const { CookieJar } = require('tough-cookie');
+const expect = require('expect.js')
 
-axios.defaults.withCredentials = true
-axios.defaults.baseURL = `http://${process.env.API_AUTH_HOST}:${process.env.API_AUTH_PORT}`
-axios.defaults.headers.post['Content-Type'] - "application/json"
-axios.defaults.timeout = 1000
-
-
+const api = got.extend({
+    prefixUrl: `http://${process.env.API_AUTH_HOST}:${process.env.API_AUTH_PORT}/user/`,
+    timeout: 2000,
+    responsType: 'json'
+})
 const EXPLICIT_FAILURE = "EXPLICIT_FAILURE"
 
 describe('API /user/', function () {
@@ -45,24 +45,19 @@ describe('API /user/', function () {
 
     describe('API /user/new', function () {
 
-        const apiOptions = {
-            url: "/user/new",
-            method: "post",
-            responseType: "json",
-            data: userTest
-        }
+        let endpoint = "new/"
 
         it('POST register new user', async function () {
-            let response = await axios(apiOptions)
-            expect(response.status).to.be(statusCode.OK)
+            let response = await api.post(endpoint, { json: userTest })
+            expect(response.statusCode).to.be(statusCode.OK)
         });
 
         it('POST register registered user (fail)', async function () {
             try {
-                await axios(apiOptions)
+                await api.post(endpoint, { json: userTest })
                 expect().fail(EXPLICIT_FAILURE)
             } catch (err) {
-                expect(err.response.status).to.be(statusCode.INTERNAL_SERVER_ERROR)
+                expect(err.response.statusCode).to.be(statusCode.INTERNAL_SERVER_ERROR)
             }
         });
 
@@ -70,28 +65,24 @@ describe('API /user/', function () {
 
     describe('API /user/login', function () {
 
-        const apiOptions = {
-            url: "/user/login",
-            method: "post",
-            responseType: "json",
-            data: userTest
-        }
+        let endpoint = "login"
 
         it('POST login test user', async function () {
-            let response = await axios(apiOptions)
-            expect(response.status).to.be(statusCode.OK)
+            let response = await api.post(endpoint, { json: userTest })
+            expect(response.statusCode).to.be(statusCode.OK)
         });
 
         it('POST login incorrect test user (fail)', async function () {
             try {
-                apiOptions.data = {
-                    username: "testDojoUnexistentUser",
-                    email: "test.unexistent.user@dojotest.dev",
-                    password: "testDojoFakePasswd"
-                }
-                let res = await axios(apiOptions)
+                let response = await api.post(endpoint, {
+                    json: {
+                        username: "testDojoUnexistentUser",
+                        email: "test.unexistent.user@dojotest.dev",
+                        password: "testDojoFakePasswd"
+                    }
+                })
             } catch (err) {
-                expect(err.response.status).to.be(statusCode.INTERNAL_SERVER_ERROR)
+                expect(err.response.statusCode).to.be(statusCode.INTERNAL_SERVER_ERROR)
             }
         });
 
@@ -99,56 +90,56 @@ describe('API /user/', function () {
 
     describe('API /user/logout', function () {
 
-        const apiOptions = {
-            url: "/user/logout",
-            method: "post",
-            responseType: "json",
-            data: userTest
-        }
+        let endpoint = "logout"
 
-        it('POST logout test user', async function () {
-            let response = await axios(apiOptions)
-            expect(response.status).to.be(statusCode.OK)
+        it('POST logout non-connected user (fail)', async function () {
+            try {
+                let response = await api.post(endpoint)
+            } catch (err) {
+                expect(err.response.statusCode).to.be(statusCode.UNAUTHORIZED)
+            }
         });
 
     })
 
     describe('API Session test', function () {
 
-        const apiOptions = {
-            url: null,
-            method: null,
-            responseType: "json",
-            data: null,
-            withCredentials: true
+        const jsonData = {
+            username: "testDojoSessionUser",
+            email: "test.session.user@dojotest.dev",
+            password: "testDojoSessionUserPasswd"
         }
 
-        it(' after creating a new account.', async function () {
-            apiOptions.url = "/user/new"
-            apiOptions.method = "post"
-            apiOptions.data = {
-                username: "testDojoSessionUser",
-                email: "test.session.user@dojotest.dev",
-                password: "testDojoSessionUserPasswd"
-            }
-            let response = await axios(apiOptions)
-            expect(response.status).to.be(statusCode.OK)
-            apiOptions.url = "/user/login"
-            response = await axios(apiOptions)
-            expect(response.status).to.be(statusCode.OK)
-            response = await axios.get("/user/profile",{
-                headers: {
-                    'set-cookie': response.headers['set-cookie']
-                }
-            })
-            console.log(response)
-
-            // apiOptions.headers = {'set-cookie': response.headers['set-cookie']}
-            // expect(response.status).to.be(statusCode.ACCEPTED)
+        it('create, login, logout account.', async function () {
+            let cookieJar = new CookieJar();
+            let response = await api.post("new", { json: jsonData })
+            expect(response.statusCode).to.be(statusCode.OK)
+            response = await api.post("login", { json: jsonData, cookieJar: cookieJar })
+            expect(response.statusCode).to.be(statusCode.OK)
+            response = await api.get("profile", { cookieJar: cookieJar })
+            expect(response.statusCode).to.be(statusCode.ACCEPTED)
+            response = await api.post("logout", { cookieJar: cookieJar })
+            expect(response.statusCode).to.be(statusCode.ACCEPTED)
         })
 
-        // it(' after logged in to an account.')
-        // it(' session destroyed after logged out.')
+        it('no access to protected /profile when not connected.', async function () {
+            try {
+                let response = await api.get("profile")
+            } catch (err) {
+                expect(err.response.statusCode).to.be(statusCode.UNAUTHORIZED)
+            }
+        })
+
+        it('no access to protected /profile after logout.', async function () {
+            let cookieJar = new CookieJar();
+            let response = await api.post("login", { json: jsonData, cookieJar: cookieJar })
+            response = await api.post("logout", { cookieJar: cookieJar })
+            try {
+                response = await api.get("profile")
+            } catch (err) {
+                expect(err.response.statusCode).to.be(statusCode.UNAUTHORIZED)
+            }
+        })
 
     })
 
