@@ -19,8 +19,9 @@ const __getUserBy = async (query, ...args) => {
     try {
         conn = await pool.getConnection()
         console.log(`POOL_ID#${conn.threadId}`, args)
-        return conn.query({sql: query}, args)
+        return conn.query({ sql: query }, args)
     } catch (err) {
+        console.error(err)
         throw err
     } finally {
         if (conn) conn.release()
@@ -44,7 +45,7 @@ module.exports = {
         let conn;
         try {
             conn = await pool.getConnection()
-            return conn.query({sql: "INSERT INTO User (username,email,hashPassword) VALUES (?,?,?);",}, [username, email, hash])
+            return conn.query({ sql: "INSERT INTO User (username,email,hashPassword) VALUES (?,?,?);", }, [username, email, hash])
         } catch (err) {
             throw err
         } finally {

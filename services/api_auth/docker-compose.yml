@@ -28,6 +28,7 @@ services:
       - 8000:${API_AUTH_PORT}
     environment:
       API_DB_HOST: "172.20.0.101"
+      API_AUTH_SECRET: "mPmtExSyMXJ8mj9e"
     networks:
       devnet:
         ipv4_address: 172.20.0.102

@@ -1,29 +1,99 @@
 const express = require('express')
-const router = express.Router()
-const dbconnector = require("../plugins/dbconnector")
+const session = require('express-session')
 const statusCode = require('http-status-codes').StatusCodes
 const bcrypt = require('bcrypt');
+const dbconnector = require("../plugins/dbconnector")
+const router = express.Router()
+const MySQLStore = require('express-mysql-session')(session);
 const saltRounds = 12;
 
 const success = (msg, options) => Object.assign({ message: msg, statusCode: statusCode.OK }, options)
 const error = (err, options) => Object.assign({ message: err.toString(), statusCode: statusCode.INTERNAL_SERVER_ERROR }, options)
+const toMillis = (s) => s * 1000;
+const IN_PROD = process.env.NODE_ENV === 'production'
+const SESSION_COOKIE_NAME = "api_auth.user.session"
+
+const sessionStore = new MySQLStore({
+    host: process.env.API_DB_HOST,
+    user: process.env.API_DB_USER,
+    password: process.env.API_DB_PASSWORD,
+    database: process.env.API_DB_DATABASE,
+    connectionLimit: process.env.API_DB_CONNECTION_LIMIT,
+    endConnectionOnClose: true,
+    clearExpired: true,
+    checkExpirationInterval: toMillis(180),
+    expiration: toMillis(60),
+    createDatabaseTable: false,
+    schema: {
+        tableName: "Session",
+        columnNames: {
+            session_id: "sessionId",
+            data: "data",
+            expires: "expires"
+        }
+    }
+})
 
 router.use(express.json())
+router.use(session({
+    key: SESSION_COOKIE_NAME,
+    secret: process.env.API_AUTH_SESSION_SECRET,
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false,
+    secure: IN_PROD,
+    cookie: {
+        maxAge: toMillis(60),
+        originalMaxAge: toMillis(60),
+        path: "/"
+    }
+}))
 
-router.post('/login', async (request, reply) => {
+
+const onRequestProtected = function (request, reply, next) {
+    if (request.session.userId) {
+        console.log("onRequestProtected: access granted.", request.session)
+        return next();
+    } else {
+        console.error("onRequestProtected: access unauthorized, session missing.", request.session.userId)
+        return reply.status(statusCode.UNAUTHORIZED).send(error("No session found for user."));
+    }
+}
+
+const onAuthentication = function (request, reply, next) {
+    if (!request.session.userId) {
+        console.log("onAuthentication: NO userId in session.", request.session.userId)
+        return next();
+    } else {
+        console.error("onAuthentication: userId in session.", request.session.userId)
+        return reply.status(statusCode.UNAUTHORIZED).send(error("Already authenticated: user id " + request.session.userId));
+    }
+}
+
+router.post('/login', onAuthentication, async (request, reply) => {
     try {
         let fetchedUser = await dbconnector.getUserByEmail(request.body.email)
         fetchedUser = fetchedUser[0]
-        console.log(fetchedUser)
+        if (fetchedUser === undefined)
+            throw Error("Authentication failed: unexistent user.")
         let result = await bcrypt.compare(request.body.password, fetchedUser.hashPassword)
         if (result) {
+            request.session.userId = fetchedUser.userId
+            console.log("DEBUG:Session:ok:", request.session)
             reply.send(success("Authentication succesful"))
         } else {
-            throw Error("Authentication failed")
+            throw Error("Authentication failed: wrong password.")
         }
+
     } catch (err) {
+        console.error("DEBUG:Session:err:", request.session)
         reply.status(statusCode.INTERNAL_SERVER_ERROR).send(error(err))
     }
+})
+
+router.get("/profile", onRequestProtected, async (request, reply) => {
+    console.log("I can see that because I'm authenticated.")
+    reply.status(statusCode.ACCEPTED).send(success("profile access granted."))
 })
 
 router.post('/new', async (request, reply) => {
@@ -41,8 +111,15 @@ router.post('/new', async (request, reply) => {
     }
 })
 
-router.post('/logout', (request, reply) => {
-    reply.send(success({ message: "Logout successfully" }))
+router.post('/logout', onRequestProtected, (request, reply) => {
+    request.session.destroy(err => {
+        if (err) {
+            console.error("logout:err:", err)
+            reply.status(statusCode.INTERNAL_SERVER_ERROR).send(error(err))
+        }
+        reply.clearCookie(SESSION_COOKIE_NAME)
+        reply.status(statusCode.ACCEPTED).send(success({ message: "Logout successfully" }))
+    })
 })
 
 module.exports = router
