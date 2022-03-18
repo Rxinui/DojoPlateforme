@@ -25,3 +25,33 @@ API_DB_PASSWORD="sifu"
 API_DB_DATABASE="dojo"
 API_DB_CONNECTION_LIMIT=10
 ```
+
+## Scopes
+
+**Must keep this update, they rely on `db_dojo`**
+
+- `api_vbox:control`: allows to use `start`, `stop`, `pause` a VM.
+- `api_vbox:read`: allows to use all directives that read information `list`, `hostinfo`, ...
+- `api_vbox:create`: allows to create a new VM instance by using `import` directive. 
+
+## Tests
+
+Login
+
+```bash
+curl -XPOST http://localhost:8000/user/login -H "Content-Type: application/json" -d '{"email": "admin@dojo.dev", "password": "admin"}'
+```
+
+Signup
+
+```bash
+curl -XPOST http://localhost:8000/user/new -H "Content-Type: application/json" -d '{"email": "admin@dojo1.dev", "password": "admin", "username": "admin"}'
+```
+
+Access protected resource `/profile`
+
+**Note**: Bearer value **must not** be encapsulated by double quoute `"`.
+
+```bash
+curl localhost:8000/user/profile -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Im5hbWUiOiJhZG1pbjEiLCJ1c2VySWQiOjN9LCJyb2xlcyI6IiIsInNjb3BlIjoiIiwiaWF0IjoxNjQ3OTY2MDU5LCJleHAiOjE2NDc5NjY2NTksImlzcyI6ImFwaV9hdXRoIiwic3ViIjoiMyJ9.eXJjmug22XvmLHINv0LEmFn1QdSriTIq4MoT5QeEtn4"
+```
