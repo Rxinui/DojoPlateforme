@@ -6,3 +6,4 @@ passlib[bcrypt]
 requests
 python-dotenv
 pika
+httpx

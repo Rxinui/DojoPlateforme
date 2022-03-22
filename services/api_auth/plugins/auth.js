@@ -37,6 +37,7 @@ passport.use(
     {
       secretOrKey: process.env.API_AUTH_JWT_SECRET,
       jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
+      issuer: "api_auth"
     },
     async (token, done) => {
       try {
@@ -44,7 +45,8 @@ passport.use(
         if (!userId[0]) throw Error(`User with id=${userId} is not registered in the db.`)
         done(null, token);
       } catch (err) {
-        done(err);
+        console.error(err)
+        done(err,false);
       }
     }
   )

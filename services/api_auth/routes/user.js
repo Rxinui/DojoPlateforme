@@ -2,13 +2,11 @@ const express = require("express");
 const statusCode = require("http-status-codes").StatusCodes;
 const bcrypt = require("bcrypt");
 const dbconnector = require("../plugins/dbconnector");
+const { ok, ko } = require("../plugins/utils");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
 const saltRounds = 12;
-const success = (msg, options) => Object.assign({ message: msg }, options);
-const error = (err, options) =>
-  Object.assign({ error: err.toString() }, options);
 const JWT_EXPIRATION_TIME = "10m"; // 10 minute
 const SEP_JWT_MULTIVALUES = " ";
 router.use(express.json());
@@ -17,9 +15,8 @@ router.get(
   "/profile",
   passport.authenticate("jwtVerification", { session: false }),
   async (request, reply) => {
-    console.log("I can see that because I'm authenticated.");
     // console.log(request.user);
-    reply.status(statusCode.ACCEPTED).send(success("profile access granted."));
+    reply.status(statusCode.ACCEPTED).send(ok("profile access granted."));
   }
 );
 
@@ -27,7 +24,7 @@ router.post("/login", async (request, reply, next) => {
   passport.authenticate("login", async (err, user, info) => {
     try {
       if (err) throw err;
-      console.log("/login debug:",info);
+      console.log("/login debug:", info, user);
       request.login(user, { session: false }, async (err) => {
         if (err) return next(err);
         let roles = await dbconnector.getUserRoles(user.userId);
@@ -51,7 +48,7 @@ router.post("/login", async (request, reply, next) => {
       });
     } catch (err) {
       console.error("DEBUG:login:error", err);
-      reply.status(statusCode.INTERNAL_SERVER_ERROR).send(error(err));
+      reply.status(statusCode.INTERNAL_SERVER_ERROR).send(ko(err));
     }
   })(request, reply, next);
 });
@@ -64,12 +61,10 @@ router.post("/new", async (request, reply) => {
       request.body.email,
       hash
     );
-    reply.send(
-      success(`User '${request.body.username}' signed up successfully`)
-    );
+    reply.send(ok(`User '${request.body.username}' signed up successfully`));
   } catch (err) {
     console.error("/new failed:", err.text);
-    reply.status(statusCode.INTERNAL_SERVER_ERROR).send(error(err.text));
+    reply.status(statusCode.INTERNAL_SERVER_ERROR).send(ko(err.text));
   }
 });
 

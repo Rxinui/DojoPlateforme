@@ -141,13 +141,13 @@
       "BasicError": {
         "title": "BasicError",
         "required": [
-          "msg",
+          "error",
           "code"
         ],
         "type": "object",
         "properties": {
-          "msg": {
-            "title": "Msg",
+          "error": {
+            "title": "Error",
             "type": "string"
           },
           "code": {
@@ -158,7 +158,7 @@
             "title": "Details"
           }
         },
-        "description": "API error response model\n\nmsg: message to describe a response"
+        "description": "API error response model\n\nerror: message to describe a error\ncode: code error\ndetails: details error"
       },
       "BasicResponse": {
         "title": "BasicResponse",
