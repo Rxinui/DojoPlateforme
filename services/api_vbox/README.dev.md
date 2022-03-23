@@ -41,3 +41,11 @@ or launch the `dev.sh` script (recommended)
 ```sh
 ./dev.sh uvicorn
 ```
+
+## Tests
+
+Use `/list` with token bearer
+
+```bash
+curl "http://localhost:8080/list?q=vms" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Im5hbWUiOiJhZG1pbiIsInVzZXJJZCI6MX0sInJvbGVzIjoiZGVzaGkgc2Vuc2VpIiwic2NvcGUiOiJhcGlfdmJveDphbGwiLCJpYXQiOjE2NDgzMTE2OTAsImV4cCI6MTY0ODMxMjI5MCwiaXNzIjoiYXBpX2F1dGgiLCJzdWIiOiIxIn0.pzILs1qNp6qzxMfJHUiRWfffjCcfZuS782qPThx9Rk0"
+```

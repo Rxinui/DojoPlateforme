@@ -37,7 +37,10 @@ function run_web_server(){
 
 if [[ $1 == "docker" ]]
 then
-    if [[ $2 == 'rm' ]]
+    if [[ $2 == 'up' ]]
+    then
+        sudo docker-compose down -v --remove-orphans && sudo docker-compose up --build -V
+    elif [[ $2 == 'rm' ]]
     then
         sudo docker rm -f $api_container && sudo docker image rm $api_image_tag
     else

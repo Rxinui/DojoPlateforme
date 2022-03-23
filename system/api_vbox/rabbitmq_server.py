@@ -9,13 +9,13 @@ import json
 import subprocess
 from typing import List
 import pika
+from utils import logger
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic, BasicProperties
-from lib import get_logger, INFO
 from dotenv import load_dotenv
 
 load_dotenv(".api_vbox.env")
-logger = get_logger(__file__, f"{__file__}.log", level=INFO)
+logger = logger(__file__, f"{__file__}.log")
 USERS_REQUEST_QUEUE = os.environ["API_VBOX_USERS_REQUEST_QUEUE"]
 
 
@@ -47,7 +47,9 @@ def on_request(
         body (bytes): _description_
     """
     response = json.loads(body)
-    logger.info("on_request@user#%s: exec '%s'", response["client_id"], response["req"])
+    message = "on_request@user#%s: exec '%s'"
+    print(message %( response["client_id"], response["req"]))
+    logger.info(message, response["client_id"], response["req"])
     response["res"] = {}
     response["res"]["output"] = _execute_cmd(response["req"]["cmd"])
     ch.basic_publish(
