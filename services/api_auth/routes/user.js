@@ -1,125 +1,73 @@
-const express = require('express')
-const session = require('express-session')
-const statusCode = require('http-status-codes').StatusCodes
-const bcrypt = require('bcrypt');
-const dbconnector = require("../plugins/dbconnector")
-const router = express.Router()
-const MySQLStore = require('express-mysql-session')(session);
+const express = require("express");
+const statusCode = require("http-status-codes").StatusCodes;
+const bcrypt = require("bcrypt");
+const dbconnector = require("../plugins/dbconnector");
+const { ok, ko } = require("../plugins/utils");
+const passport = require("passport");
+const jwt = require("jsonwebtoken");
+const router = express.Router();
 const saltRounds = 12;
+const JWT_EXPIRATION_TIME = "10m"; // 10 minute
+const SEP_JWT_MULTIVALUES = " ";
+router.use(express.json());
 
-const success = (msg, options) => Object.assign({ message: msg, statusCode: statusCode.OK }, options)
-const error = (err, options) => Object.assign({ message: err.toString(), statusCode: statusCode.INTERNAL_SERVER_ERROR }, options)
-const toMillis = (s) => s * 1000;
-const IN_PROD = process.env.NODE_ENV === 'production'
-const SESSION_COOKIE_NAME = "api_auth.user.session"
+router.get(
+  "/profile",
+  passport.authenticate("jwtVerification", { session: false }),
+  async (request, reply) => {
+    // console.log(request.user);
+    reply.status(statusCode.ACCEPTED).send(ok("profile access granted."));
+  }
+);
 
-const sessionStore = new MySQLStore({
-    host: process.env.API_DB_HOST,
-    user: process.env.API_DB_USER,
-    password: process.env.API_DB_PASSWORD,
-    database: process.env.API_DB_DATABASE,
-    connectionLimit: process.env.API_DB_CONNECTION_LIMIT,
-    endConnectionOnClose: true,
-    clearExpired: true,
-    checkExpirationInterval: toMillis(180),
-    expiration: toMillis(60),
-    createDatabaseTable: false,
-    schema: {
-        tableName: "Session",
-        columnNames: {
-            session_id: "sessionId",
-            data: "data",
-            expires: "expires"
-        }
-    }
-})
-
-router.use(express.json())
-router.use(session({
-    key: SESSION_COOKIE_NAME,
-    secret: process.env.API_AUTH_SESSION_SECRET,
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-    secure: IN_PROD,
-    cookie: {
-        maxAge: toMillis(60),
-        originalMaxAge: toMillis(60),
-        path: "/"
-    }
-}))
-
-
-const onRequestProtected = function (request, reply, next) {
-    if (request.session.userId) {
-        console.log("onRequestProtected: access granted.", request.session)
-        return next();
-    } else {
-        console.error("onRequestProtected: access unauthorized, session missing.", request.session.userId)
-        return reply.status(statusCode.UNAUTHORIZED).send(error("No session found for user."));
-    }
-}
-
-const onAuthentication = function (request, reply, next) {
-    if (!request.session.userId) {
-        console.log("onAuthentication: NO userId in session.", request.session.userId)
-        return next();
-    } else {
-        console.error("onAuthentication: userId in session.", request.session.userId)
-        return reply.status(statusCode.UNAUTHORIZED).send(error("Already authenticated: user id " + request.session.userId));
-    }
-}
-
-router.post('/login', onAuthentication, async (request, reply) => {
+router.post("/login", async (request, reply, next) => {
+  passport.authenticate("login", async (err, user, info) => {
     try {
-        let fetchedUser = await dbconnector.getUserByEmail(request.body.email)
-        fetchedUser = fetchedUser[0]
-        if (fetchedUser === undefined)
-            throw Error("Authentication failed: unexistent user.")
-        let result = await bcrypt.compare(request.body.password, fetchedUser.hashPassword)
-        if (result) {
-            request.session.userId = fetchedUser.userId
-            console.log("DEBUG:Session:ok:", request.session)
-            reply.send(success("Authentication succesful"))
-        } else {
-            throw Error("Authentication failed: wrong password.")
-        }
-
+      if (err) throw err;
+      console.log("/login debug:", info, user);
+      request.login(user, { session: false }, async (err) => {
+        if (err) return next(err);
+        let roles = await dbconnector.getUserRoles(user.userId);
+        let scope = await dbconnector.getUserScopes(user.userId);
+        const options = {
+          issuer: "api_auth",
+          subject: user.userId.toString(),
+          expiresIn: JWT_EXPIRATION_TIME,
+        };
+        const payload = {
+          user: { name: user.username, userId: user.userId },
+          roles: [...roles].flat(1).join(SEP_JWT_MULTIVALUES),
+          scope: scope.map((arr) => arr.join(":")).join(SEP_JWT_MULTIVALUES),
+        };
+        const token = jwt.sign(
+          payload,
+          process.env.API_AUTH_JWT_SECRET,
+          options
+        );
+        return reply.send({ token });
+      });
     } catch (err) {
-        console.error("DEBUG:Session:err:", request.session)
-        reply.status(statusCode.INTERNAL_SERVER_ERROR).send(error(err))
+      console.error("DEBUG:login:error", err);
+      reply.status(statusCode.INTERNAL_SERVER_ERROR).send(ko(err));
     }
-})
+  })(request, reply, next);
+});
 
-router.get("/profile", onRequestProtected, async (request, reply) => {
-    console.log("I can see that because I'm authenticated.")
-    reply.status(statusCode.ACCEPTED).send(success("profile access granted."))
-})
+router.post("/new", async (request, reply) => {
+  try {
+    let hash = await bcrypt.hash(request.body.password, saltRounds);
+    await dbconnector.addNewUser(
+      request.body.username,
+      request.body.email,
+      hash
+    );
+    reply.send(ok(`User '${request.body.username}' signed up successfully`));
+  } catch (err) {
+    console.error("/new failed:", err.text);
+    reply.status(statusCode.INTERNAL_SERVER_ERROR).send(ko(err.text));
+  }
+});
 
-router.post('/new', async (request, reply) => {
-    try {
-        let hasUser = await dbconnector.hasUserByEmail(request.body.email)
-        if (hasUser.response) {
-            throw Error("email already used by a user")
-        } else {
-            let hash = await bcrypt.hash(request.body.password, saltRounds)
-            dbconnector.addNewUser(request.body.username, request.body.email, hash)
-            reply.send(success(`User '${request.body.username}' signed up successfully`))
-        }
-    } catch (err) {
-        reply.status(statusCode.INTERNAL_SERVER_ERROR).send(error(err))
-    }
-})
+router.post("/logout", (request, reply) => {});
 
-router.post('/logout', onRequestProtected, (request, reply) => {
-    request.session.destroy(err => {
-        if (err) {
-            console.error("logout:err:", err)
-            reply.status(statusCode.INTERNAL_SERVER_ERROR).send(error(err))
-        }
-        reply.clearCookie(SESSION_COOKIE_NAME)
-        reply.status(statusCode.ACCEPTED).send(success({ message: "Logout successfully" }))
-    })
-})
-
-module.exports = router
+module.exports = router;

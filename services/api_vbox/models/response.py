@@ -24,9 +24,11 @@ class BasicError(BaseModel):
     """
     API error response model
 
-    msg: message to describe a response
+    error: message to describe a error
+    code: code error
+    details: details error
     """
 
-    msg: str = ...
+    error: str = ...
     code: str = ...
     details: Any

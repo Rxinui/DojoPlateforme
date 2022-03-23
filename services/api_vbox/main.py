@@ -7,8 +7,10 @@
 
 import os
 import json
+from re import A
 import subprocess
 import uuid
+import httpx
 from typing import List, Optional, Union, Tuple, Any
 from models import BasicResponse, BasicError
 from fastapi import FastAPI, Query, status, HTTPException, Request
@@ -84,13 +86,37 @@ def _set_user_id(user: Any):
         raise ValueError("Incorrect user within main.app")
 
 
+@app.exception_handler(status.HTTP_401_UNAUTHORIZED)
+@app.middleware("http")
+async def verify_authentication(request: Request, call_next):
+    print(request.headers["Authorization"])
+    token_bearer = request.headers["Authorization"]
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"{os.getenv('API_AUTH_URL')}/token/internal/verify",
+            headers={"Authorization": token_bearer},
+        )
+        print("debug:verify:", response)
+        if response.status_code == status.HTTP_401_UNAUTHORIZED:
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content=BasicError(
+                    code="AUTH_FAILED",
+                    error="Token bearer not valid.",
+                    details="api_auth rejected your request.",
+                ).__dict__,
+            )
+        token_payload = response.json()
+        return await call_next(request)
+
+
 @app.exception_handler(StarletteHTTPException)
 async def __http_exception_handler(request, exc):
     return JSONResponse(
         status_code=exc.status_code,
         content=BasicError(
             code="BAD_HTTP_VALIDATION",
-            msg="HTTP Error",
+            error="HTTP Error",
             details=str(exc.detail),
         ).__dict__,
     )
@@ -103,7 +129,7 @@ async def __validation_exception_handler(request, exc):
         status_code=status.HTTP_400_BAD_REQUEST,
         content=BasicError(
             code="BAD_REQUEST_VALIDATION",
-            msg="Error during HTTP arguments validation",
+            error="Error during HTTP arguments validation",
             details=exc.errors(),
         ).__dict__,
     )
@@ -129,7 +155,7 @@ def _execute_cmd(user: Request, cmd: List[str]) -> str:
             output = proc.communicate()[0].decode("utf-8")
     else:
         raise EnvironmentError("API_VBOX_EXECMODE env variable is missing.")
-    print("debug:", app_users)
+    print("debug:app_users:", app_users)
     return output
 
 
@@ -212,7 +238,6 @@ async def vbox_manage_list(
                 "msg": "Missing query to directive list.",
             },
         )
-
     _set_user_id(request)
     items = {}
     items["sort"] = sort

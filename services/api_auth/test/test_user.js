@@ -70,6 +70,7 @@ describe('API /user/', function () {
         it('POST login test user', async function () {
             let response = await api.post(endpoint, { json: userTest })
             expect(response.statusCode).to.be(statusCode.OK)
+            expect(JSON.parse(response.body)).to.have.property("token")
         });
 
         it('POST login incorrect test user (fail)', async function () {
@@ -88,21 +89,7 @@ describe('API /user/', function () {
 
     })
 
-    describe('API /user/logout', function () {
-
-        let endpoint = "logout"
-
-        it('POST logout non-connected user (fail)', async function () {
-            try {
-                let response = await api.post(endpoint)
-            } catch (err) {
-                expect(err.response.statusCode).to.be(statusCode.UNAUTHORIZED)
-            }
-        });
-
-    })
-
-    describe('API Session test', function () {
+    describe('API connexion with token', function () {
 
         const jsonData = {
             username: "testDojoSessionUser",
@@ -111,31 +98,18 @@ describe('API /user/', function () {
         }
 
         it('create, login, logout account.', async function () {
-            let cookieJar = new CookieJar();
             let response = await api.post("new", { json: jsonData })
             expect(response.statusCode).to.be(statusCode.OK)
-            response = await api.post("login", { json: jsonData, cookieJar: cookieJar })
+            response = await api.post("login", { json: jsonData })
             expect(response.statusCode).to.be(statusCode.OK)
-            response = await api.get("profile", { cookieJar: cookieJar })
-            expect(response.statusCode).to.be(statusCode.ACCEPTED)
-            response = await api.post("logout", { cookieJar: cookieJar })
+            let token = JSON.parse(response.body).token
+            response = await api.get("profile", { headers: {"Authorization": "Bearer "+token} })
             expect(response.statusCode).to.be(statusCode.ACCEPTED)
         })
 
-        it('no access to protected /profile when not connected.', async function () {
+        it('no access to protected /profile when no token.', async function () {
             try {
                 let response = await api.get("profile")
-            } catch (err) {
-                expect(err.response.statusCode).to.be(statusCode.UNAUTHORIZED)
-            }
-        })
-
-        it('no access to protected /profile after logout.', async function () {
-            let cookieJar = new CookieJar();
-            let response = await api.post("login", { json: jsonData, cookieJar: cookieJar })
-            response = await api.post("logout", { cookieJar: cookieJar })
-            try {
-                response = await api.get("profile")
             } catch (err) {
                 expect(err.response.statusCode).to.be(statusCode.UNAUTHORIZED)
             }
