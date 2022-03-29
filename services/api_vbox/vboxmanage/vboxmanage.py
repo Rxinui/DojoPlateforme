@@ -14,13 +14,4 @@ class VBoxManageBuilder:
     Python class to build shell VBoxManage commands programatically.
     """
 
-    __list: VBoxManageList = VBoxManageList()
-
-    @classmethod
-    def list(cls) -> VBoxManageList:
-        """Return the unique list instance.
-
-        Returns:
-            VBoxManageList: list subcommand
-        """
-        return cls.__list
+    list: VBoxManageList = VBoxManageList()

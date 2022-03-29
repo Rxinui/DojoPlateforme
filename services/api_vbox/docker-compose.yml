@@ -2,15 +2,38 @@ version: "3.8"
 services:
   api:
     image: rxinui/api_vbox:latest
+    depends_on:
+      - rabbitmq
     build:
       context: .
+    restart: always
     environment:
-      API_VBOX_HOST: 0.0.0.0
-      API_VBOX_PORT: 80
-      API_VBOX_EXECMODE: "container"
-      API_VBOX_RABBITMQ_HOST: "0.0.0.0"
-      API_VBOX_RABBITMQ_PORT: "5672"
-      API_VBOX_USERS_REQUEST_QUEUE: "api_vbox.users.request_queue"
+      - API_VBOX_HOST=172.21.0.11
+      - API_VBOX_PORT=80
+      - API_VBOX_EXECMODE=container
+      - API_VBOX_RABBITMQ_HOST=172.21.0.3
+      - API_VBOX_RABBITMQ_PORT=5672
+      - API_VBOX_USERS_REQUEST_QUEUE=api_vbox.users.request_queue
+      - API_AUTH_URL="http://localhost:8000"
     ports:
-      - 9000:8080
-    
+      - 9000:80
+    networks:
+      devnet:
+        ipv4_address: 172.21.0.11
+  rabbitmq:
+    image: rabbitmq:3.9.13
+    restart: always
+    ports:
+      - 5672:5672
+    environment:
+      - RABBITMQ_HOST=172.21.0.3
+      - RABBITMQ_PORT=5672
+    networks:
+      devnet:
+        ipv4_address: 172.21.0.3
+networks:
+  devnet:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.21.0.0/26" # API global internal network - dev

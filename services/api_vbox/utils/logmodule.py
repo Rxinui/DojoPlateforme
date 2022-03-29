@@ -4,15 +4,14 @@ Global Python3 logger object configured for this project.
 @author Rxinui
 @date 2022-01-31
 """
+import os
 import logging
-from typing import Literal
 
 formatter = logging.Formatter(
     "%(asctime)s::%(name)s::%(levelname)s::%(message)s", datefmt="%Y-%m-%dT%H:%M:%S"
 )
 
-
-def get_logger(name: str, logfile: str, level: Literal) -> logging.Logger:
+def logger(name: str, logfile: str) -> logging.Logger:
     """
     Create a logger {name} for a given {logfile} that follows the global configuration.
 
@@ -26,7 +25,12 @@ def get_logger(name: str, logfile: str, level: Literal) -> logging.Logger:
     """
     handler = logging.FileHandler(logfile, encoding="utf-8")
     handler.setFormatter(formatter)
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    logger.addHandler(handler)
-    return logger
+    _logger = logging.getLogger(name)
+    if not os.getenv("APP_ENVIRONMENT") or os.getenv(
+        "APP_ENVIRONMENT"
+    ).lower().startswith("dev"):
+        _logger.setLevel(logging.DEBUG)
+    elif os.getenv("APP_ENVIRONMENT").lower().startswith("prod"):
+        _logger.setLevel(logging.INFO)
+    _logger.addHandler(handler)
+    return _logger

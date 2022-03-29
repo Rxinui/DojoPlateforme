@@ -14,8 +14,11 @@
   "paths": {
     "/list": {
       "get": {
+        "tags": [
+          "list"
+        ],
         "summary": "Vbox Manage List",
-        "description": "Apply `VBoxManage list <directive>` according to {list} q parameter.\n\nArgs:\n    list (Optional[Query[List[str]]]): q to list\n\nReturns:\n    (BasicResponse): /list result",
+        "description": "Apply `VBoxManage list <directive>` with parameter `q` a list of directives.",
         "operationId": "vbox_manage_list_list_get",
         "parameters": [
           {
@@ -49,6 +52,15 @@
             },
             "name": "long",
             "in": "query"
+          },
+          {
+            "required": true,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            },
+            "name": "authorization",
+            "in": "header"
           }
         ],
         "responses": {

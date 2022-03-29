@@ -23,6 +23,15 @@ class RPCClient:
         Args:
             id (str): client id represented by the user id
         """
+        self.__id = client_id
+        self.request_queue = request_queue
+
+    def __enter__(self):
+        """Create a RPC connection from Client to RabbitMQ server usign `with`.
+
+        Returns:
+            RPCClient: RPC client instance
+        """
         self.__connection = pika.BlockingConnection(
             pika.ConnectionParameters(
                 host=os.environ["API_VBOX_RABBITMQ_HOST"],
@@ -30,8 +39,6 @@ class RPCClient:
             )
         )
         self.__channel = self.__connection.channel()
-        self.__id = client_id
-        self.request_queue = request_queue
         # STEP 1.bis: declare a private queue USER_REPLY_QUEUE with a unique random id
         result = self.__channel.queue_declare(
             queue=f"api_vbox.user#{self.__id}.reply_queue", exclusive=True
@@ -42,6 +49,15 @@ class RPCClient:
             on_message_callback=self.__on_response,
             auto_ack=True,
         )
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Close RPC Client connection.
+
+        Returns:
+            Any: connection exit code
+        """
+        return self.__connection.close()
 
     @property
     def id(self) -> str:
@@ -71,7 +87,7 @@ class RPCClient:
         if self.corr_id == props.correlation_id:
             self.response = json.loads(body)
 
-    def send_request(self, request: str) -> dict:
+    def send_request(self, request: dict) -> dict:
         """Send JSON request to {self.request_queue}.
         It will wait the reply from the server host,
         which is the output of the VBoxManage command.
