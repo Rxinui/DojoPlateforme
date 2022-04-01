@@ -44,8 +44,19 @@ or launch the `dev.sh` script (recommended)
 
 ## Tests
 
+Get a token bearer from `api_auth`
+```bash
+curl -XPOST http://localhost:8000/user/login -H "Content-Type: application/json" -d '{"email": "shihan@dojo.dev", "password": "shihan"}'
+curl -XPOST http://localhost:8000/user/login -H "Content-Type: application/json" -d '{"email": "t.api_vbox.scope_3@dojo.dev", "password": "dojotest"}'
+```
+
 Use `/list` with token bearer
+```bash
+curl "http://localhost:8080/list?q=vms" -H "Authorization: Bearer "
+```
+
+Use `/import` with token bearer
 
 ```bash
-curl "http://localhost:8080/list?q=vms" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Im5hbWUiOiJhZG1pbiIsInVzZXJJZCI6MX0sInJvbGVzIjoiZGVzaGkgc2Vuc2VpIiwic2NvcGUiOiJhcGlfdmJveDphbGwiLCJpYXQiOjE2NDgzMTE2OTAsImV4cCI6MTY0ODMxMjI5MCwiaXNzIjoiYXBpX2F1dGgiLCJzdWIiOiIxIn0.pzILs1qNp6qzxMfJHUiRWfffjCcfZuS782qPThx9Rk0"
+curl -XPOST "http://localhost:8080/import" -H "Content-Type: application/json" -H "Authorization: Bearer " -d '{"vmname": "error-vm", "image": "pmint_box_dev.ova"}'
 ```

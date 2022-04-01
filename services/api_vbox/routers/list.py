@@ -15,6 +15,7 @@ from dependencies.user import ReadScope
 logger = logger(__name__, "main.py.log")
 router = APIRouter(tags=["list"])
 
+
 def cmd_from_directive(
     directive: str, sort: bool = False, long: bool = False
 ) -> Union[None, str]:
@@ -25,8 +26,11 @@ def cmd_from_directive(
     None if the directive is incorrect.
     """
     try:
-
-        return getattr(VBoxManageBuilder.list, directive)(sort, long)
+        return (
+            getattr(VBoxManageBuilder.list, directive)
+            .apply_options(sort=sort, long=long)
+            .build()
+        )
     except AttributeError as exc:
         logger.warning(
             "%s directive=%s is a bad directive.",
@@ -49,7 +53,7 @@ def process_list_directive(
     The following output will be parsed and return.
     """
     cmd = cmd_from_directive(directive, sort, long)
-    output = execute_cmd(user, cmd)
+    output, _, _ = execute_cmd(user, cmd)
     f_parse = getattr(VBoxManageBuilder.list.parser, f"parse_{directive}")
     res = f_parse(output, long)
     return directive, res

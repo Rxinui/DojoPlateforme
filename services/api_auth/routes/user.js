@@ -7,7 +7,7 @@ const passport = require("passport");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
 const saltRounds = 12;
-const JWT_EXPIRATION_TIME = "10m"; // 10 minute
+const JWT_EXPIRATION_TIME = "60m"; // 10 minute
 const SEP_JWT_MULTIVALUES = " ";
 router.use(express.json());
 

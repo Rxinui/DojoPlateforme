@@ -15,7 +15,7 @@ from pika.spec import Basic, BasicProperties
 class RPCClient:
     """RPC Client on RabbitMQ"""
 
-    REPLY_WAITING_SECONDS_LIMIT = 10
+    REPLY_WAITING_SECONDS_LIMIT = None
 
     def __init__(self, client_id: str, request_queue: str):
         """Initialize a RPC client to communicate with RabbitMQ broker.

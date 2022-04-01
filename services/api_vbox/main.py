@@ -15,6 +15,7 @@ from fastapi.openapi.utils import get_openapi
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from dependencies.user import HTTPBearerTokenAuth
 from routers import list as route_list
+from routers import import_ as route_import
 from openapi import api_vbox_openapi
 from dotenv import load_dotenv
 from utils import logger
@@ -28,7 +29,7 @@ logger = logger(__name__, f"{__file__}.log")
 AuthStrategy = HTTPBearerTokenAuth
 app = FastAPI(dependencies=[Depends(AuthStrategy)])
 app.include_router(route_list.router)
-
+app.include_router(route_import.router)
 
 def _openapi():
     """Update openAPI with custom values stored in openapi/.
