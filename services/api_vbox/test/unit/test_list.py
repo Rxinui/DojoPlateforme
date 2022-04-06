@@ -1,52 +1,60 @@
-from vboxmanage import VBoxManageList, VBoxManageListParser
+from vboxmanage.list import VBoxManageList, VBoxManageListParser
+
+
 class TestVBoxManageList:
     def setup_method(self):
-        self.list = VBoxManageList()
+        self.command = VBoxManageList()
 
     def teardown_method(self):
-        self.list = None
+        self.command = None
 
     def test_list_vms(self):
-        assert "VBoxManage list vms".split() == self.list.vms()
+        assert "VBoxManage list vms".split() == self.command.vms
 
-    def test_list_sorted_vms(self):
-        assert "VBoxManage list -s vms".split() == self.list.vms(sort=True)
+    def test_list_sort_vms(self):
+        assert "VBoxManage list vms -s".split() == self.command.vms.sort()
+
+    def test_list_sort_vms_using_apply_options(self):
+        assert "VBoxManage list vms -s".split() == self.command.vms.apply_options(
+            sort=True, long=False
+        )
 
     def test_list_sort_long_vms(self):
-        assert "VBoxManage list -s -l vms".split() == self.list.vms(
+        assert "VBoxManage list vms -s -l".split() == self.command.vms.sort().long()
+
+    def test_list_sort_long_vms_using_apply_options(self):
+        assert "VBoxManage list vms -s -l".split() == self.command.vms.apply_options(
             sort=True, long=True
         )
 
     def test_list_runningvms(self):
-        assert "VBoxManage list runningvms".split() == self.list.runningvms()
+        assert "VBoxManage list runningvms".split() == self.command.runningvms
 
     def test_list_intnets(self):
-        assert "VBoxManage list -l intnets".split() == self.list.intnets(long=True)
+        assert "VBoxManage list intnets -l".split() == self.command.intnets.long()
 
     def test_list_hostinfo(self):
-        assert "VBoxManage list -l hostinfo".split() == self.list.hostinfo(
-            sort=False, long=True
-        )
+        assert "VBoxManage list hostinfo -l".split() == self.command.hostinfo.long()
 
     def test_list_groups(self):
-        assert "VBoxManage list groups".split() == self.list.groups()
+        assert "VBoxManage list groups".split() == self.command.groups
 
     def test_list_systemproperties(self):
         assert (
-            "VBoxManage list systemproperties".split() == self.list.systemproperties()
+            "VBoxManage list systemproperties".split() == self.command.systemproperties
         )
 
     def test_list_bridgedifs(self):
-        assert "VBoxManage list bridgedifs".split() == self.list.bridgedifs()
+        assert "VBoxManage list bridgedifs".split() == self.command.bridgedifs
 
     def test_list_hostonlyifs(self):
-        assert "VBoxManage list hostonlyifs".split() == self.list.hostonlyifs()
+        assert "VBoxManage list hostonlyifs".split() == self.command.hostonlyifs
 
     def test_list_natnets(self):
-        assert "VBoxManage list natnets".split() == self.list.natnets()
+        assert "VBoxManage list natnets".split() == self.command.natnets
 
     def test_list_dhcpservers(self):
-        assert "VBoxManage list dhcpservers".split() == self.list.dhcpservers()
+        assert "VBoxManage list dhcpservers".split() == self.command.dhcpservers
 
 
 class TestVBoxManageListParser:

@@ -46,3 +46,9 @@ class ReadScope(VerifyScope):
 
     def __init__(self, request: Request):
         super().__init__(request, Scope.READ, Scope.ALL)
+
+class CreateScope(VerifyScope):
+    """User scope to create VMs"""
+
+    def __init__(self, request: Request):
+        super().__init__(request, Scope.CREATE, Scope.ALL)

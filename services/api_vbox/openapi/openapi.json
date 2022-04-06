@@ -146,6 +146,69 @@
           }
         }
       }
+    },
+    "/import": {
+      "post": {
+        "tags": [
+          "import"
+        ],
+        "summary": "Vbox Manage Import",
+        "description": "Apply `VBoxManage import` command depending on {ovf_params}.\n\nArgs:\n    request (Request): request emitted\n    ovf_params (OvfSessionParams): ovf parameters\n\nRaises:\n    HTTPException: ovf path {ovf_params.image} does not exist\n    HTTPException: error threw during the execution of `VBoxManage import`\n\nReturns:\n    BasicResponse: success response",
+        "operationId": "vbox_manage_import_import_post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            },
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OvfSessionParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -201,6 +264,45 @@
             "items": {
               "$ref": "#/components/schemas/ValidationError"
             }
+          }
+        }
+      },
+      "OvfSessionParams": {
+        "title": "OvfSessionParams",
+        "required": [
+          "image",
+          "vmname"
+        ],
+        "type": "object",
+        "properties": {
+          "image": {
+            "title": "Image",
+            "type": "string",
+            "format": "path"
+          },
+          "vmname": {
+            "title": "Vmname",
+            "type": "string"
+          },
+          "options": {
+            "title": "Options",
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            },
+            "default": []
+          },
+          "vsys": {
+            "title": "Vsys",
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": 0
           }
         }
       },

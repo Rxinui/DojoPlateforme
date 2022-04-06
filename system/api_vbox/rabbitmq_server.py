@@ -7,7 +7,7 @@ import os
 import sys
 import json
 import subprocess
-from typing import List
+from typing import List, Tuple
 import pika
 from utils import logger
 from pika.adapters.blocking_connection import BlockingChannel
@@ -17,9 +17,11 @@ from dotenv import load_dotenv
 load_dotenv(".api_vbox.env")
 logger = logger(__file__, f"{__file__}.log")
 USERS_REQUEST_QUEUE = os.environ["API_VBOX_USERS_REQUEST_QUEUE"]
+EXEC_TIMEOUT = 300
+EXIT_TIMEOUT_EXPIRED = -1000
 
 
-def _execute_cmd(cmd: List[str]) -> str:
+def _execute_cmd(cmd: List[str]) -> Tuple[str, str, int]:
     """Execute a shell command.
 
     Args:
@@ -28,8 +30,22 @@ def _execute_cmd(cmd: List[str]) -> str:
     Returns:
         str: command output
     """
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE) as proc:
-        return proc.communicate()[0].decode("utf-8")
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
+        try:
+            output, error = proc.communicate(timeout=EXEC_TIMEOUT)
+            output, error, exit_code = (
+                output.decode("utf-8"),
+                error.decode("utf-8"),
+                proc.returncode,
+            )
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            output, error, exit_code = (
+                "",
+                "subprocess timeout expired.",
+                EXIT_TIMEOUT_EXPIRED,
+            )
+        return output, error, exit_code
 
 
 def on_request(
@@ -48,10 +64,14 @@ def on_request(
     """
     response = json.loads(body)
     message = "on_request@user#%s: exec '%s'"
-    print(message %( response["client_id"], response["req"]))
+    print(message % (response["client_id"], response["req"]))
     logger.info(message, response["client_id"], response["req"])
     response["res"] = {}
-    response["res"]["output"] = _execute_cmd(response["req"]["cmd"])
+    (
+        response["res"]["output"],
+        response["res"]["error"],
+        response["res"]["exit_code"],
+    ) = _execute_cmd(response["req"]["cmd"])
     ch.basic_publish(
         exchange="",
         routing_key=props.reply_to,  # REPLY_QUEUE defined by Client

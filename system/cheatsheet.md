@@ -18,6 +18,8 @@ Import a virtualbox appliance (.ova, .ovf) and create a new VM from it
 - display appliance information: `VBoxManage import <path_appliance> -n`
 - create a new VM from appliance: `VBoxManage import <path_appliance> --vsys <int:vsys_number> [ --vmname <name> --basefolder <path_vms_storage> --options (keepnatmacs | keepallmacs) ]`
 
+Test command : `VBoxManage import system/virtualbox/ovf/pmint_box_dev.ova --vsys 0 --basefolder /media/kidr/RDD/vms/` the basefolder has plenty of free space.
+
 ### `VBoxManage unregistervm`
 
 Unregister a vm or delete it
