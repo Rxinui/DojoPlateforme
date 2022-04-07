@@ -303,8 +303,14 @@
               }
             ],
             "default": 0
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer",
+            "default": 0
           }
-        }
+        },
+        "description": "Datamodel for OVF session parameters.\n\nAttributes:\n    image (Path[str]): specify ovf image path\n    vmname (str): name to assign to the vm\n    options (List[bool]): options to keep in the following order\n                          between 'keepallmacs', 'keepnatmacs', 'importtovdi'\n    vsys (Union[int, str]): virtual system to use\n    expires_in (Optional[int]): time to live in seconds of the vm. Specify when to delete it."
       },
       "ValidationError": {
         "title": "ValidationError",

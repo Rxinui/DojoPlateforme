@@ -52,9 +52,10 @@ class VBoxManageDirective(VBoxManageCommand, ABC):
     Directive of VBoxManageCommand
     """
 
-    def __init__(self) -> None:
+    def __init__(self, vbox_command: VBoxManageCommand, directive: str) -> None:
         """Initialise VBoxManage command"""
         super().__init__()
+        self._cmd = vbox_command.cmd + [directive]
         self._options = {}
         self._options_order = []
 

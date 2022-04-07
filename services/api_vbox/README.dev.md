@@ -21,11 +21,17 @@ Example:
 ```ini
 API_VBOX_HOST="127.0.0.1"
 API_VBOX_PORT="8080"
-API_VBOX_EXECMODE="container"
+API_VBOX_EXECMODE="local"
+# Storage for API vbox
+STORAGE_VMS_BASEFOLDER="/opt/DojoPlateforme/system/virtualbox/vms/"
+STORAGE_OVF_BASEFOLDER="/opt/DojoPlateforme/system/virtualbox/ovf/"
 # RabbitMQ broker variables
 API_VBOX_RABBITMQ_HOST="0.0.0.0"
 API_VBOX_RABBITMQ_PORT="5672"
 API_VBOX_USERS_REQUEST_QUEUE="api_vbox.users.request_queue"
+# API authentication
+API_AUTH_URL="http://0.0.0.0:8000"
+APP_ENVIRONMENT="dev"
 ```
 
 ## FastAPI
@@ -58,5 +64,5 @@ curl "http://localhost:8080/list?q=vms" -H "Authorization: Bearer "
 Use `/import` with token bearer
 
 ```bash
-curl -XPOST "http://localhost:8080/import" -H "Content-Type: application/json" -H "Authorization: Bearer " -d '{"vmname": "error-vm", "image": "pmint_box_dev.ova"}'
+curl -XPOST "http://localhost:8080/import" -H "Content-Type: application/json" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Im5hbWUiOiJzaGloYW4iLCJ1c2VySWQiOjJ9LCJyb2xlcyI6InNlbnNlaSIsInNjb3BlIjoiYXBpX3Zib3g6Y29udHJvbCBhcGlfdmJveDpjcmVhdGUgYXBpX3Zib3g6cmVhZCIsImlhdCI6MTY0OTMyNjE4NywiZXhwIjoxNjQ5MzI5Nzg3LCJpc3MiOiJhcGlfYXV0aCIsInN1YiI6IjIifQ.R8h4JnnN8ogWaO3WSDqeS2I1iW2f4zTWl5o-5WN9U2w" -d '{"vmname": "error-vm", "image": "pmint_box_dev.ova"}'
 ```

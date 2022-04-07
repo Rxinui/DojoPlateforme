@@ -51,7 +51,7 @@ class VBoxManageListParser:
                 before: '"pmint_box_dev-1" {77bd1e0e-edc6-47fc-807a-987c296c64dd}'
                 after: {"pmint_box_dev-1": "77bd1e0e-edc6-47fc-807a-987c296c64dd"}
             """
-            get_vm = lambda l: re.search(r"\"([_\d\w-]+)\"\s+\{([\d\w-]+)\}", l.strip())
+            get_vm = lambda l: re.search(r"\"([\._\d\w-]+)\"\s+\{([\d\w-]+)\}", l.strip())
             vms = {}
             for line in output.splitlines():
                 if line:
