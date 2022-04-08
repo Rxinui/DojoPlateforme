@@ -5,16 +5,12 @@ Python directive for VBoxManageList builder.
 @date 2022-01-21
 @see https://www.virtualbox.org/manual/ch08.html#vboxmanage-list
 """
-from .._vboxcommand import VBoxManageDirective, VBoxManageCommand
+from .._vboxcommand import VBoxManageDirective
 
 
 class VBoxManageListDirective(VBoxManageDirective):
 
     """General 'list' directive in-one class"""
-
-    def __init__(self, vbox_command: VBoxManageCommand, directive: str) -> None:
-        super().__init__()
-        self._cmd = vbox_command.cmd + [directive]
 
     def sort(self, flag: bool = True):
         """Add the 'sorted' flag to commands.

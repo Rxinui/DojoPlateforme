@@ -1,3 +1,4 @@
+from .unregistervm import VBoxManageUnregistervm
 from .list import VBoxManageList
 from .import_ import VBoxManageImport
 
@@ -16,3 +17,8 @@ class VBoxManageBuilder:
     @property
     def import_image(cls) -> VBoxManageImport:
         return VBoxManageImport()
+
+    @classmethod
+    @property
+    def unregistervm(cls) -> VBoxManageUnregistervm:
+        return VBoxManageUnregistervm()

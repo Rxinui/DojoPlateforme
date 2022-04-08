@@ -5,19 +5,21 @@ Enable the use of `VBoxManage import` by HTTP using the api_vbox
 @author Rxinui
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 from fastapi import APIRouter, status, HTTPException, Request, Depends
 from models import BasicResponse, BasicError, OvfSessionParams
 from vboxmanage import VBoxManageBuilder
-from utils import logger, execute_cmd
+from utils import logger, execute_cmd, execute_future_cmd
 from dependencies.user import CreateScope
 
+load_dotenv()
 logger = logger(__name__, "main.py.log")
 router = APIRouter(tags=["import"])
 
-VMS_BASEFOLDER = Path("/media/kidr/RDD/vms/")
-OVF_BASEFOLDER = Path("/opt/DojoPlateforme/system/virtualbox/ovf/")
-
+STORAGE_VMS_BASEFOLDER = Path(os.getenv("STORAGE_VMS_BASEFOLDER"))
+STORAGE_OVF_BASEFOLDER= Path(os.getenv("STORAGE_OVF_BASEFOLDER"))
 
 @router.post(
     "/import",
@@ -28,7 +30,9 @@ OVF_BASEFOLDER = Path("/opt/DojoPlateforme/system/virtualbox/ovf/")
     },
     dependencies=[Depends(CreateScope)],
 )
-async def vbox_manage_import(request: Request, ovf_params: OvfSessionParams) -> BasicResponse:
+async def vbox_manage_import(
+    request: Request, ovf_params: OvfSessionParams
+) -> BasicResponse:
     """Apply `VBoxManage import` command depending on {ovf_params}.
 
     Args:
@@ -42,7 +46,7 @@ async def vbox_manage_import(request: Request, ovf_params: OvfSessionParams) -> 
     Returns:
         BasicResponse: success response
     """
-    ovf_params.image = OVF_BASEFOLDER / ovf_params.image
+    ovf_params.image = STORAGE_OVF_BASEFOLDER/ ovf_params.image
     if not ovf_params.image.exists():
         logger.error("OVF image '%s' not found", ovf_params.image)
         raise HTTPException(
@@ -54,7 +58,7 @@ async def vbox_manage_import(request: Request, ovf_params: OvfSessionParams) -> 
     items = {"params": ovf_params}
     cmd = (
         VBoxManageBuilder.import_image.ovf(ovf_params.image)
-        .vsys(ovf_params.vsys,basefolder=VMS_BASEFOLDER)
+        .vsys(ovf_params.vsys, basefolder=STORAGE_VMS_BASEFOLDER)
         .vmname(ovf_params.vmname)
         .options(*ovf_params.options)
         .build()
@@ -66,6 +70,18 @@ async def vbox_manage_import(request: Request, ovf_params: OvfSessionParams) -> 
         logger.error("Command executed threw an error: %s", items["result"].split("\n"))
         raise HTTPException(status.HTTP_409_CONFLICT, items["result"])
     logger.info("Command executed is a success: %s", items["result"].split("\n"))
+    if ovf_params.expires_in > 0:
+        logger.info(
+            "Auto-delete on '%s' in %s seconds",
+            ovf_params.vmname,
+            ovf_params.expires_in,
+        )
+        cmd_delete_vm = (
+            VBoxManageBuilder.unregistervm.vmname(ovf_params.vmname).delete().build()
+        )
+        execute_future_cmd(
+            request.state.token_data["sub"], cmd_delete_vm, ovf_params.expires_in
+        )
     return BasicResponse(
         msg=f"Importation of {ovf_params.image} is a success.", items=items
     )

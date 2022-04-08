@@ -16,8 +16,13 @@ class VBoxManageImportDirective(VBoxManageDirective):
     def __init__(
         self, vbox_command: VBoxManageCommand, directive: str, vsys: int = 0
     ) -> None:
-        super().__init__()
-        self._cmd = vbox_command.cmd + [directive]
+        """Initialize {directive} of the given 'import' command.
+
+        Args:
+            vbox_command (VBoxManageCommand): VBoxManage command
+            directive (str): directive used by VBoxManage command
+        """
+        super().__init__(vbox_command, directive)
         self._set_option("--vsys", str(vsys))
 
     def dry_run(self, flag: bool = True) -> "VBoxManageImportDirective":
