@@ -1,6 +1,7 @@
 from .unregistervm import VBoxManageUnregistervm
 from .list import VBoxManageList
 from .import_ import VBoxManageImport
+from .startvm import VBoxManageStartvm
 
 
 class VBoxManageBuilder:
@@ -21,4 +22,9 @@ class VBoxManageBuilder:
     @classmethod
     @property
     def unregistervm(cls) -> VBoxManageUnregistervm:
+        return VBoxManageUnregistervm()
+
+    @classmethod
+    @property
+    def startvm(cls) -> VBoxManageUnregistervm:
         return VBoxManageUnregistervm()
