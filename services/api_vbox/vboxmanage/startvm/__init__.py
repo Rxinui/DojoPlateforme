@@ -16,10 +16,6 @@ class VBoxManageStartvm(VBoxManageCommand):
 
     ORIGIN: str = "startvm"
 
-    def __init__(self) -> None:
-        super().__init__()
-        self._cmd.append(self.ORIGIN)
-
     def uuid(self, uuid: str) -> VBoxManageStartvmDirective:
         """Specify which vm to start by it's uuid.
 

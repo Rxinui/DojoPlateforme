@@ -27,10 +27,6 @@ class VBoxManageList(VBoxManageCommand):
     """
     DIRECTIVES: List[str] = parser.DIRECTIVES
 
-    def __init__(self) -> None:
-        super().__init__()
-        self._cmd.append(self.ORIGIN)
-
     @property
     def vms(self) -> VBoxManageListDirective:
         """Specify 'vms' directive to list subcommand.
