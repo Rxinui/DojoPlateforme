@@ -9,16 +9,13 @@ from .._vboxcommand import VBoxManageCommand
 from ._directives import VBoxManageImportDirective
 from ._parser import VBoxManageImportParser
 
+
 class VBoxManageImport(VBoxManageCommand):
     """Python wrapper for `VBoxManage import`."""
 
     parser = VBoxManageImportParser
 
     ORIGIN: str = "import"
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._cmd.append(self.ORIGIN)
 
     def ovf(self, ovfname: str) -> VBoxManageImportDirective:
         """Specify 'ovfname' directive to import subcommand.

@@ -11,10 +11,14 @@ class VBoxManageCommand(ABC):
 
     CLI: str = "VBoxManage"
 
+    ORIGIN: str = None
+
     def __init__(self) -> None:
         """Initialise VBoxManage command"""
         super().__init__()
         self._cmd = [self.CLI]
+        if self.ORIGIN:
+            self._cmd.append(self.ORIGIN)
 
     @property
     def cmd(self) -> List[str]:
@@ -23,7 +27,7 @@ class VBoxManageCommand(ABC):
         Returns:
             List[str]: command terms
         """
-        return self._cmd
+        return self._cmd.copy()
 
     def __repr__(self) -> List[str]:
         """Represent a VBoxManageCommand as a list of terms.
@@ -123,7 +127,8 @@ class VBoxManageDirective(VBoxManageCommand, ABC):
             bool: True if the VBoxManageDirective has the same
                   ordered terms and options than {__o} else False.
         """
-        o_cmd, o_options = __o[: len(self._cmd)], __o[len(self._cmd) :]
+        cmd_length = len(self._cmd)
+        o_cmd, o_options = __o[:cmd_length], __o[cmd_length:]
         check_cmd = super().__eq__(o_cmd)
         check_options = []
         for flag in self._options_order:
@@ -132,4 +137,5 @@ class VBoxManageDirective(VBoxManageCommand, ABC):
             if not isinstance(self._options[flag], bool):
                 # extract value from options
                 check_options.append(o_options.pop(0) == str(self._options[flag]))
-        return check_cmd and all(check_options)
+        check_options_length = len(__o[cmd_length:]) == len(check_options)
+        return check_cmd and all(check_options) and check_options_length

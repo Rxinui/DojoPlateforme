@@ -16,10 +16,6 @@ class VBoxManageUnregistervm(VBoxManageCommand):
 
     ORIGIN: str = "unregistervm"
 
-    def __init__(self) -> None:
-        super().__init__()
-        self._cmd.append(self.ORIGIN)
-
     def uuid(self, uuid: str) -> VBoxManageUnregistervmDirective:
         """Specify the vm to unregister by vm's uuid.
 
