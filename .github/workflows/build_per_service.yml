@@ -1,11 +1,13 @@
 name: Build and test services independently
 on:
   push:
-    branches: [main]
+    branches: [main, pfe45_ci_cd]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 env:
   DB_DOJO_VERSION: 0.1.1
+  API_AUTH_VERSION: 0.1.1
+  API_VBOX_VERSION: 0.1.1
   NODE_ENV: development
 jobs:
   call-commitlinter:
@@ -26,18 +28,27 @@ jobs:
         uses: 42Crunch/api-security-audit-action@96228d9c48873fe001354047d47fb62be42abeb1
         with:
           api-token: ${{ secrets.API_TOKEN_42CRUNCH }}
-          min-score: 75
+          min-score: 50
           upload-to-code-scanning: true
   build-api_vbox:
     needs: api_vbox-static-security
     runs-on: ubuntu-20.04
-    container: python:3.9
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:
-          python-version: "3.9.10"
+          python-version: "3.9"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -45,11 +56,20 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Test services/api_vbox/ with pytest
         run: |
-          cd $GITHUB_WORKSPACE/services/api_vbox/ && pytest;
+          cd $GITHUB_WORKSPACE/services/api_vbox/ && pytest test/unit/;
           cd $GITHUB_WORKSPACE
       - name: Lint with pylint
         run: |
           find services/api_vbox/ -name '*.py' -exec pylint {} --rcfile $GITHUB_WORKSPACE/.pylintrc \;
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: services/api_vbox/
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/api_vbox:${{ env.API_VBOX_VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/api_vbox:latest
   build-db_dojo:
     needs: call-commitlinter
     runs-on: ubuntu-20.04
@@ -74,37 +94,25 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/db_dojo:${{ env.DB_DOJO_VERSION }}
             ${{ secrets.DOCKERHUB_USERNAME }}/db_dojo:latest
   build-api_auth:
-    needs: build-db_dojo
+    needs: call-commitlinter
     runs-on: ubuntu-20.04
-    container:
-      image: node:lts-gallium
-      env:
-        NODE_ENV: ${{ env.NODE_ENV }}
-        API_HOST_URL: http://localhost:3000
-        API_DB_HOST: db_dojo
-        API_DB_USER: ${{ secrets.API_DB_DOJO_USER }}
-        API_DB_PASSWORD: ${{ secrets.API_DB_DOJO_PASSWORD }}
-        API_DB_DATABASE: dojo
-        API_DB_CONNECTION_LIMIT: 10
-    services:
-      db_dojo:
-        image: rxinui/db_dojo:latest
-        ports:
-          - 3306:3306
-        env:
-          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: yes
-          MARIADB_USER: ${{ secrets.API_DB_DOJO_USER }}
-          MARIADB_PASSWORD: ${{ secrets.API_DB_DOJO_PASSWORD }}
-          MARIADB_DATABASE: dojo
-    defaults:
-      run:
-        working-directory: ./services/api_auth/
     steps:
-      - name: Check out repository code
+      - name: Checkout
         uses: actions/checkout@v2
-      - name: Install node dependencies
-        run: npm i
-      - name: Run API server
-        run: npm run start &
-      - name: Run tests on API server
-        run: npm run test
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: services/api_auth/
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/api_auth:${{ env.API_AUTH_VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/api_auth:latest
