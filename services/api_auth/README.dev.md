@@ -38,6 +38,11 @@ APP_ENVIRONMENT="dev"
 
 ## Tests
 
+### Automatic test
+
+Run `npm test`
+### Debug test
+
 Login
 
 ```bash
