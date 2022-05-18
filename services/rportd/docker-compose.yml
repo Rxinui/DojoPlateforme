@@ -1,0 +1,18 @@
+version: "3.8"
+services:
+  rport:
+    image: rxinui/rportd
+    build:
+      context: .
+    tty: true
+    hostname: .myrport.com
+    ports:
+      - 5000:5000 #api
+      - 8000:8000 #client
+      - 20000-20050:20000-20050 #range of tunnels
+    environment:
+      - RPORTD_AUTH_USER="admin"
+      - RPORTD_AUTH_PASSWORD="shihan"
+      - RPORTD_API_PORT=5000
+      - RPORTD_CLIENT_PORT=8000
+      - TUNNEL_RANGE_PORT="20000-20050"
