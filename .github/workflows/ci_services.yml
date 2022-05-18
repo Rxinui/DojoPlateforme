@@ -1,4 +1,12 @@
-name: Build and test services independently
+# CI services aims to build all services as Docker image
+# Logicial view of the CI is :
+#
+# --> <Initialize service>  
+# --> [Check service's security]  
+# --> [Test unit tests of the service]
+# --> <Build and push as Docker image>
+
+name: Continuous integration of services into Docker Image
 on:
   push:
     branches: [main, pfe45_ci_cd]
@@ -61,7 +69,6 @@ jobs:
       - name: Lint with pylint
         run: |
           find services/api_vbox/ -name '*.py' -exec pylint {} --rcfile $GITHUB_WORKSPACE/.pylintrc \;
-
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
