@@ -1,5 +1,6 @@
 version: "3.8"
 services:
+  ## Databases ##
   db_dojo:
     image: rxinui/db_dojo:latest
     build:
@@ -14,13 +15,34 @@ services:
     networks:
       intdojonet:
         ipv4_address: 172.20.0.2
+  ## System components ##
   rabbitmq:
     image: rabbitmq:3.9.13
     ports:
       - 5672:5672
     networks:
       intdojonet:
-        ipv4_address: 172.20.0.3
+        ipv4_address: 172.20.0.30
+  rportd:
+    image: rxinui/rportd
+    build:
+      context: ./services/rportd/
+    tty: true
+    hostname: .myrport.com
+    ports:
+      - 9050:5000 #api
+      - 9080:8000 #client
+      - 20000-20050:20000-20050 #range of tunnels
+    environment:
+      - RPORTD_AUTH_USER="admin"
+      - RPORTD_AUTH_PASSWORD="shihan"
+      - RPORTD_API_PORT=5000
+      - RPORTD_CLIENT_PORT=8000
+      - TUNNEL_RANGE_PORT="20000-20050"
+    networks:
+      intdojonet:
+        ipv4_address: 172.20.0.31
+  ## APIs ##
   api_auth:
     depends_on:
       - db_dojo
@@ -30,7 +52,7 @@ services:
     ports:
       - 8000:80
     environment:
-      API_AUTH_HOST: 172.20.0.11
+      API_AUTH_HOST: 172.20.0.10
       API_AUTH_PORT: 80
       API_AUTH_SESSION_SECRET: "bhkKyq8yEaHd49PD"
       API_AUTH_JWT_SECRET: "q@M&P8gXLJrh47&d"
@@ -39,10 +61,10 @@ services:
       API_DB_PASSWORD: sifu
       API_DB_DATABASE: dojo
       API_DB_CONNECTION_LIMIT: 10
-    
+
     networks:
       intdojonet:
-        ipv4_address: 172.20.0.11
+        ipv4_address: 172.20.0.10
   api_vbox:
     depends_on:
       - db_dojo
@@ -53,16 +75,16 @@ services:
     ports:
       - 8001:80
     environment:
-      API_VBOX_HOST: 172.20.0.12
+      API_VBOX_HOST: 172.20.0.11
       API_VBOX_PORT: 80
       API_VBOX_EXECMODE: container
-      API_VBOX_RABBITMQ_HOST: 172.20.0.3
+      API_VBOX_RABBITMQ_HOST: 172.20.0.30
       API_VBOX_RABBITMQ_PORT: 5672
       API_VBOX_USERS_REQUEST_QUEUE: api_vbox.users.request_queue
-      API_AUTH_URL: http://172.20.0.11
+      API_AUTH_URL: http://172.20.0.10
     networks:
       intdojonet:
-        ipv4_address: 172.20.0.12
+        ipv4_address: 172.20.0.11
 networks:
   intdojonet:
     name: intdojonet

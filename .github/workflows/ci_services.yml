@@ -9,7 +9,7 @@
 name: Continuous integration of services into Docker Image
 on:
   push:
-    branches: [main, pfe45_ci_cd]
+    branches: [main, develop]
   pull_request:
     branches: [main, develop]
 env:
@@ -18,17 +18,17 @@ env:
   API_VBOX_VERSION: 0.1.1
   NODE_ENV: development
 jobs:
-  call-commitlinter:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Lint branch newest commit format
-        id: lintResult
-        uses: Rxinui/commitlinter@main
-        with:
-          commitTags: "new,fix,doc,ref,wip"
-          commitIssueId: "PFE"
+  # call-commitlinter:
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - name: Lint branch newest commit format
+  #       id: lintResult
+  #       uses: Rxinui/commitlinter@main
+  #       with:
+  #         commitTags: "new,fix,doc,ref,wip"
+  #         commitIssueId: "PFE"
   api_vbox-static-security:
-    needs: call-commitlinter
+    # needs: call-commitlinter
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -78,7 +78,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/api_vbox:${{ env.API_VBOX_VERSION }}
             ${{ secrets.DOCKERHUB_USERNAME }}/api_vbox:latest
   build-db_dojo:
-    needs: call-commitlinter
+    # needs: call-commitlinter
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
@@ -101,7 +101,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/db_dojo:${{ env.DB_DOJO_VERSION }}
             ${{ secrets.DOCKERHUB_USERNAME }}/db_dojo:latest
   build-api_auth:
-    needs: call-commitlinter
+    # needs: call-commitlinter
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
