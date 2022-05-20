@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS dojo;
-USE dojo;
+CREATE SCHEMA IF NOT EXISTS dojo_auth;
+USE dojo_auth;
 
 CREATE TABLE IF NOT EXISTS User (
     userId INT AUTO_INCREMENT PRIMARY KEY,
@@ -59,3 +59,6 @@ CREATE TABLE IF NOT EXISTS RoleOwnedByUser (
 --     ON UPDATE CASCADE
 --     ON DELETE CASCADE
 -- );
+
+GRANT ALL PRIVILEGES ON dojo_auth.* TO 'sifu'@'localhost';
+GRANT ALL PRIVILEGES ON dojo_auth.* TO 'sifu'@'172.20.0.%';

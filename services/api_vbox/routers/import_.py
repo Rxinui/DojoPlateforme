@@ -46,8 +46,9 @@ async def vbox_manage_import(
     Returns:
         BasicResponse: success response
     """
-    ovf_params.image = STORAGE_OVF_BASEFOLDER/ ovf_params.image
-    if not ovf_params.image.exists():
+    ovf_params.image = STORAGE_OVF_BASEFOLDER / ovf_params.image
+    _, _, exit_code = execute_cmd(request.state.token_data["sub"], ["ls",str(ovf_params.image)])
+    if exit_code != 0:
         logger.error("OVF image '%s' not found", ovf_params.image)
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
@@ -71,6 +72,7 @@ async def vbox_manage_import(
         raise HTTPException(status.HTTP_409_CONFLICT, items["result"])
     logger.info("Command executed is a success: %s", items["result"].split("\n"))
     if ovf_params.expires_in > 0:
+        # TODO fix this when EXECMODE=container -- impossible to use future thread
         logger.info(
             "Auto-delete on '%s' in %s seconds",
             ovf_params.vmname,

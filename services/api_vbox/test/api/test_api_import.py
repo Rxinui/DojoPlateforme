@@ -1,8 +1,8 @@
-import subprocess
 import time
 from http import HTTPStatus
 from typing import Dict
 from . import TestApi
+from utils import execute_cmd
 from vboxmanage import VBoxManageList
 
 
@@ -16,7 +16,7 @@ class TestApiImport(TestApi):
                 "password": "dojotest",
             }
         )
-        cls.ovf = "pmint_box_dev.ova"
+        cls.ovf = "tinycore.ova"
 
     @classmethod
     def teardown_class(cls):
@@ -37,14 +37,16 @@ class TestApiImport(TestApi):
 
     @classmethod
     def _delete_vm(cls, vmname: str) -> int:
-        exit_code = subprocess.call(["VBoxManage", "unregistervm", vmname, "--delete"])
+        # exit_code = subprocess.call(["VBoxManage", "unregistervm", vmname, "--delete"])
+        _, _, exit_code = execute_cmd("test_api_import",["VBoxManage", "unregistervm", vmname, "--delete"])
         if exit_code != 0:
             raise Exception("Error during _delete_vm. Can't delete vm '%s'" % vmname)
         return exit_code
 
     @classmethod
     def _list_vms(cls) -> Dict[str, str]:
-        output = subprocess.check_output(["VBoxManage", "list", "vms"]).decode("utf-8")
+        # output = subprocess.check_output(["VBoxManage", "list", "vms"]).decode("utf-8")
+        output, _, _ = execute_cmd("test_api_import",["VBoxManage", "list", "vms"])
         return VBoxManageList.parser.parse_vms(output)
 
     @classmethod

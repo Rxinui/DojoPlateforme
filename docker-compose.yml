@@ -9,9 +9,6 @@ services:
       - 3306:3306
     environment:
       MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: oui
-      MARIADB_USER: sifu
-      MARIADB_PASSWORD: sifu
-      MARIADB_DATABASE: dojo
     networks:
       intdojonet:
         ipv4_address: 172.20.0.2
@@ -59,7 +56,7 @@ services:
       API_DB_HOST: 172.20.0.2
       API_DB_USER: sifu
       API_DB_PASSWORD: sifu
-      API_DB_DATABASE: dojo
+      API_DB_DATABASE: dojo_auth
       API_DB_CONNECTION_LIMIT: 10
 
     networks:
@@ -91,4 +88,8 @@ networks:
     ipam:
       driver: default
       config:
+        ## Range of IP
+        # FROM .2 to .9 --> databases
+        # FROM .10 to .29 --> API Services 
+        # FROM .30 to .49 --> System Components 
         - subnet: "172.20.0.0/26" # API global internal network - dev
