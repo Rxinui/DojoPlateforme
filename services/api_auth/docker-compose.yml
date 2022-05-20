@@ -7,13 +7,10 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - "../db_dojo/volume/initdb.d/:/docker-entrypoint-initdb.d/"
+      - "../db_dojo/initdb.d/:/docker-entrypoint-initdb.d/"
     restart: always
     environment:
       MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: oui
-      MARIADB_USER: sifu
-      MARIADB_PASSWORD: sifu
-      MARIADB_DATABASE: dojo
     networks:
       devnet:
         ipv4_address: 172.20.0.101
@@ -28,6 +25,7 @@ services:
       - 8000:${API_AUTH_PORT}
     environment:
       API_DB_HOST: "172.20.0.101"
+      API_DB_DATABASE: "dojo_auth"
       API_AUTH_SECRET: "mPmtExSyMXJ8mj9e"
     networks:
       devnet:
