@@ -19,18 +19,18 @@ This API is a wrapper of `VBoxManage` command-line. Therefore, VirtualBox 6.1 pa
 Example:
 
 ```ini
-API_VBOX_HOST="127.0.0.1"
+API_VBOX_HOST="0.0.0.0"
 API_VBOX_PORT="8080"
-API_VBOX_EXECMODE="local"
+API_VBOX_EXECMODE="container"
 # Storage for API vbox
-STORAGE_VMS_BASEFOLDER="/opt/DojoPlateforme/system/virtualbox/vms/"
-STORAGE_OVF_BASEFOLDER="/opt/DojoPlateforme/system/virtualbox/ovf/"
+STORAGE_VMS_BASEFOLDER="media/kidr/RDD/vms/"
+STORAGE_OVF_BASEFOLDER="/media/kidr/RDD/Documents/"
 # RabbitMQ broker variables
 API_VBOX_RABBITMQ_HOST="0.0.0.0"
 API_VBOX_RABBITMQ_PORT="5672"
 API_VBOX_USERS_REQUEST_QUEUE="api_vbox.users.request_queue"
 # API authentication
-API_AUTH_URL="http://0.0.0.0:8000"
+API_AUTH_URL="http://localhost:8000"
 APP_ENVIRONMENT="dev"
 ```
 
