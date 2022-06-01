@@ -84,9 +84,9 @@ class VBoxManageDirective(VBoxManageCommand, ABC):
         """
         for flag, value in kwargs.items():
             if isinstance(value, dict):
-                self.__getattribute__(flag)(**value)
+                getattr(self,flag)(**value)
             else:
-                self.__getattribute__(flag)(value)
+                getattr(self,flag)(value)
         return self
 
     def build(self) -> List[str]:

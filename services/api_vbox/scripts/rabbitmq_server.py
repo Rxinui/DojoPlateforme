@@ -7,18 +7,42 @@ import os
 import sys
 import json
 import subprocess
+import logging
 from typing import List, Tuple
+from pathlib import Path
 import pika
-from utils import logger
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic, BasicProperties
 from dotenv import load_dotenv
 
-load_dotenv(".api_vbox.env")
-logger = logger(__file__, f"{__file__}.log")
-USERS_REQUEST_QUEUE = os.environ["API_VBOX_USERS_REQUEST_QUEUE"]
+# Global constants
+FILE_REALPATH = Path(os.path.realpath(__file__))
+GLOBAL_ENV_PATH = FILE_REALPATH.parents[1]
+LOGFILE = f"/var/log/{FILE_REALPATH.name}.log"
+LOGLEVEL = logging.INFO
 EXEC_TIMEOUT = 300
 EXIT_TIMEOUT_EXPIRED = -1000
+
+"""Global setup
+
+Initialize:
+- load .env file
+- program logger
+"""
+handler = logging.FileHandler(LOGFILE, encoding="utf-8")
+handler.setFormatter(
+    logging.Formatter(
+        "%(asctime)s::%(name)s::%(levelname)s::%(message)s", datefmt="%Y-%m-%dT%H:%M:%S"
+    )
+)
+logger = logging.getLogger(__name__)
+logger.addHandler(handler)
+logger.setLevel(LOGLEVEL)
+logger.info("Load .env file from '%s'", GLOBAL_ENV_PATH)
+load_dotenv(GLOBAL_ENV_PATH / ".env")
+
+# Global variables
+USERS_REQUEST_QUEUE = os.environ["API_VBOX_USERS_REQUEST_QUEUE"]
 
 
 def _execute_cmd(cmd: List[str]) -> Tuple[str, str, int]:
