@@ -1,0 +1,33 @@
+# CD services aims to deploy all services Docker image to (pre-)prod
+# Logicial view of the CD is :
+#
+#
+
+name: Continuous deployment of services with Git through SSH
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    name: Deploy project
+    steps:
+      - name: Use of Rxinui/ssh-deploy-repo-action to deploy
+        uses: Rxinui/ssh-deploy-repo-action@v1.1
+        with:
+          ssh-user: ubuntu
+          ssh-password: ${{ secrets.OVH_ns343000_PASSWORD }}
+          ssh-domain: ${{ secrets.OVH_ns343000_DOMAIN }}
+          git-clone-by: ssh
+          target-branch: develop
+          target-directory: /opt/pfe/DojoPlateforme
+          pre-command: |
+            cd /opt/pfe/DojoPlateforme &&
+            docker-compose down -v --remove-orphans
+          post-command: docker-compose up --build -d
+            
+
+
+  

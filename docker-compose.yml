@@ -8,7 +8,7 @@ services:
     ports:
       - 3306:3306
     environment:
-      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: oui
+      - MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=yes
     networks:
       intdojonet:
         ipv4_address: 172.20.0.2
@@ -49,15 +49,15 @@ services:
     ports:
       - 8000:80
     environment:
-      API_AUTH_HOST: 172.20.0.10
-      API_AUTH_PORT: 80
-      API_AUTH_SESSION_SECRET: "bhkKyq8yEaHd49PD"
-      API_AUTH_JWT_SECRET: "q@M&P8gXLJrh47&d"
-      API_DB_HOST: 172.20.0.2
-      API_DB_USER: sifu
-      API_DB_PASSWORD: sifu
-      API_DB_DATABASE: dojo_auth
-      API_DB_CONNECTION_LIMIT: 10
+      - API_AUTH_HOST=172.20.0.10
+      - API_AUTH_PORT=80
+      - API_AUTH_SESSION_SECRET="bhkKyq8yEaHd49PD"
+      - API_AUTH_JWT_SECRET="q@M&P8gXLJrh47&d"
+      - API_DB_HOST=172.20.0.2
+      - API_DB_USER=sifu
+      - API_DB_PASSWORD=sifu
+      - API_DB_DATABASE=dojo_auth
+      - API_DB_CONNECTION_LIMIT=10
 
     networks:
       intdojonet:
@@ -72,13 +72,16 @@ services:
     ports:
       - 8001:80
     environment:
-      API_VBOX_HOST: 172.20.0.11
-      API_VBOX_PORT: 80
-      API_VBOX_EXECMODE: container
-      API_VBOX_RABBITMQ_HOST: 172.20.0.30
-      API_VBOX_RABBITMQ_PORT: 5672
-      API_VBOX_USERS_REQUEST_QUEUE: api_vbox.users.request_queue
-      API_AUTH_URL: http://172.20.0.10
+      - API_VBOX_HOST=172.20.0.11
+      - API_VBOX_PORT=80
+      - API_VBOX_EXECMODE=container
+      - STORAGE_VMS_BASEFOLDER="/var/opt/DojoPlateforme/vms/"
+      - STORAGE_OVF_BASEFOLDER="/usr/share/DojoPlateforme/ovf/"
+      - API_VBOX_RABBITMQ_HOST=172.20.0.30
+      - API_VBOX_RABBITMQ_PORT=5672
+      - API_VBOX_USERS_REQUEST_QUEUE=api_vbox.users.request_queue
+      - API_AUTH_URL=http://172.20.0.10
+      - APP_ENVIRONMENT=dev
     networks:
       intdojonet:
         ipv4_address: 172.20.0.11
