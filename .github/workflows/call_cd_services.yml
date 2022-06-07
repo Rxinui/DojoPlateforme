@@ -3,12 +3,14 @@
 #
 #
 
-name: Continuous deployment of services with Git through SSH
+name: "[Reusable] Continuous deployment of services with Git through SSH"
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+  workflow_call:
+    inputs:
+      deploy-branch:
+        required: true
+        default: develop
+        type: string
 jobs:
   deploy:
     runs-on: ubuntu-20.04
@@ -21,7 +23,7 @@ jobs:
           ssh-password: ${{ secrets.OVH_ns343000_PASSWORD }}
           ssh-domain: ${{ secrets.OVH_ns343000_DOMAIN }}
           git-clone-by: ssh
-          target-branch: develop
+          target-branch: ${{ inputs.deploy-branch }}
           target-directory: /opt/pfe/DojoPlateforme
           pre-command: |
             cd /opt/pfe/DojoPlateforme &&

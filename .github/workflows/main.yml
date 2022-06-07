@@ -1,0 +1,15 @@
+name: Simple CI/CD to remote host (Pre-prod)
+on:
+  push:
+    branches: [main, develop, pfe48_cd_deploy]
+  pull_request:
+    branches: [main, develop]
+jobs:
+  # call-ci-services:
+  #   uses: ./.github/workflows/call_ci_services.yml
+  call-cd-services:
+    uses: ./.github/workflows/call_cd_services.yml
+    with:
+      deploy-branch: pfe48_cd_deploy
+    secrets: inherit
+  

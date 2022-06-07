@@ -6,8 +6,10 @@
 # --> [Test unit tests of the service]
 # --> <Build and push as Docker image>
 
-name: Continuous integration of services into Docker Image
+name: "[Reusable] Continuous integration of services into Docker Image"
 on:
+  # workflow_call:
+    
   push:
     branches: [main, develop]
   pull_request:
