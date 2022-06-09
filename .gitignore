@@ -11,9 +11,9 @@
 *.prod.*
 *.env
 
-# Ignore system/virtualbox/ dir that contains big files
-system/virtualbox/ovf/
-system/virtualbox/vms/
+# Ignore generated dir and files
+bin/
+
 
 # Ignore dev configuration
 .sync.*.json

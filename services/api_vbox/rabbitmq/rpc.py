@@ -34,8 +34,8 @@ class RPCClient:
         """
         self.__connection = pika.BlockingConnection(
             pika.ConnectionParameters(
-                host=os.environ["API_VBOX_RABBITMQ_HOST"],
-                port=os.environ["API_VBOX_RABBITMQ_PORT"],
+                host=os.environ["RABBITMQ_HOST"],
+                port=os.environ["RABBITMQ_PORT"],
             )
         )
         self.__channel = self.__connection.channel()
