@@ -26,8 +26,8 @@ API_VBOX_EXECMODE="container"
 STORAGE_VMS_BASEFOLDER="media/kidr/RDD/vms/"
 STORAGE_OVF_BASEFOLDER="/media/kidr/RDD/Documents/"
 # RabbitMQ broker variables
-API_VBOX_RABBITMQ_HOST="0.0.0.0"
-API_VBOX_RABBITMQ_PORT="5672"
+RABBITMQ_HOST="0.0.0.0"
+RABBITMQ_PORT="5672"
 API_VBOX_USERS_REQUEST_QUEUE="api_vbox.users.request_queue"
 # API authentication
 API_AUTH_URL="http://localhost:8000"

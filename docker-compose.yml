@@ -31,8 +31,8 @@ services:
       - 9080:8000 #client
       - 20000-20050:20000-20050 #range of tunnels
     environment:
-      - RPORTD_AUTH_USER="admin"
-      - RPORTD_AUTH_PASSWORD="shihan"
+      - RPORTD_AUTH_USER=admin
+      - RPORTD_AUTH_PASSWORD=${RPORTD_AUTH_PASSWORD:?RPORTD_AUTH_PASSWORD must be set}
       - RPORTD_API_PORT=5000
       - RPORTD_CLIENT_PORT=8000
       - TUNNEL_RANGE_PORT="20000-20050"
@@ -51,11 +51,10 @@ services:
     environment:
       - API_AUTH_HOST=172.20.0.10
       - API_AUTH_PORT=80
-      - API_AUTH_SESSION_SECRET="bhkKyq8yEaHd49PD"
-      - API_AUTH_JWT_SECRET="q@M&P8gXLJrh47&d"
+      - API_AUTH_JWT_SECRET=${API_AUTH_JWT_SECRET:?API_AUTH_JWT_SECRET must be set}
       - API_DB_HOST=172.20.0.2
       - API_DB_USER=sifu
-      - API_DB_PASSWORD=sifu
+      - API_DB_PASSWORD=${API_DB_PASSWORD:?API_DB_PASSWORD must be set}
       - API_DB_DATABASE=dojo_auth
       - API_DB_CONNECTION_LIMIT=10
 
@@ -75,11 +74,11 @@ services:
       - API_VBOX_HOST=172.20.0.11
       - API_VBOX_PORT=80
       - API_VBOX_EXECMODE=container
-      - STORAGE_VMS_BASEFOLDER="/var/opt/DojoPlateforme/vms/"
-      - STORAGE_OVF_BASEFOLDER="/usr/share/DojoPlateforme/ovf/"
-      - API_VBOX_RABBITMQ_HOST=172.20.0.30
-      - API_VBOX_RABBITMQ_PORT=5672
-      - API_VBOX_USERS_REQUEST_QUEUE=api_vbox.users.request_queue
+      - STORAGE_VMS_BASEFOLDER=${STORAGE_VMS_BASEFOLDER:-/var/opt/DojoPlateforme/vms/}
+      - STORAGE_OVF_BASEFOLDER=${STORAGE_OVF_BASEFOLDER:-/usr/share/DojoPlateforme/ovf/}
+      - RABBITMQ_HOST=172.20.0.30
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - API_VBOX_USERS_REQUEST_QUEUE=${API_VBOX_USERS_REQUEST_QUEUE:-api_vbox.users.request_queue}
       - API_AUTH_URL=http://172.20.0.10
       - APP_ENVIRONMENT=dev
     networks:

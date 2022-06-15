@@ -12,6 +12,6 @@ jobs:
     needs: call-ci-services
     uses: ./.github/workflows/call_deploy_ssh.yml
     with:
-      deploy-branch: pfe48_cd_deploy
+      deploy-branch: develop
     secrets: inherit
   

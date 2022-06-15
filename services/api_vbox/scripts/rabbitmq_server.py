@@ -29,15 +29,22 @@ Initialize:
 - load .env file
 - program logger
 """
-handler = logging.FileHandler(LOGFILE, encoding="utf-8")
-handler.setFormatter(
-    logging.Formatter(
-        "%(asctime)s::%(name)s::%(levelname)s::%(message)s", datefmt="%Y-%m-%dT%H:%M:%S"
+try:
+    handler = logging.FileHandler(LOGFILE, encoding="utf-8")
+    handler.setFormatter(
+        logging.Formatter(
+            "%(asctime)s::%(name)s::%(levelname)s::%(message)s",
+            datefmt="%Y-%m-%dT%H:%M:%S",
+        )
     )
-)
-logger = logging.getLogger(__name__)
-logger.addHandler(handler)
-logger.setLevel(LOGLEVEL)
+    logger = logging.getLogger(__name__)
+    logger.addHandler(handler)
+    logger.addHandler(logging.StreamHandler())
+    logger.setLevel(LOGLEVEL)
+except PermissionError as exc:
+    print(f"{exc.strerror}: '{LOGFILE}'", file=sys.stderr)
+    print("Please, try to run the script as root-user.", file=sys.stderr)
+    sys.exit(exc.errno)
 logger.info("Load .env file from '%s'", GLOBAL_ENV_PATH)
 load_dotenv(GLOBAL_ENV_PATH / ".env")
 
@@ -110,24 +117,33 @@ def on_request(
 
 
 if __name__ == "__main__":
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(
-            os.environ["API_VBOX_RABBITMQ_HOST"], os.environ["API_VBOX_RABBITMQ_PORT"]
-        )
-    )
-    logger.info("main: connection established")
-    channel = connection.channel()
-    channel.queue_declare(queue=USERS_REQUEST_QUEUE)
-    logger.info("main: channel %s declared and ready to consume", USERS_REQUEST_QUEUE)
-    channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(queue=USERS_REQUEST_QUEUE, on_message_callback=on_request)
     try:
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(
+                os.environ["RABBITMQ_HOST"], os.environ["RABBITMQ_PORT"]
+            )
+        )
+        logger.info("main: connection established")
+        channel = connection.channel()
+        channel.queue_declare(queue=USERS_REQUEST_QUEUE)
+        logger.info(
+            "main: channel %s declared and ready to consume", USERS_REQUEST_QUEUE
+        )
+        channel.basic_qos(prefetch_count=1)
+        channel.basic_consume(queue=USERS_REQUEST_QUEUE, on_message_callback=on_request)
         print(
             f"Waiting for messages on {USERS_REQUEST_QUEUE}. Press Ctrl+C to exit...\r"
         )
         channel.start_consuming()
+    except pika.exceptions.AMQPConnectionError as exc:
+        logger.error(
+            "RabbitMQ server %s:%s is unreachable.",
+            os.environ["RABBITMQ_HOST"],
+            os.environ["RABBITMQ_PORT"],
+        )
+        sys.exit(1)
     except KeyboardInterrupt:
         if connection.is_open:
             connection.close()
-        sys.exit(0)
-    sys.exit(1)
+        sys.exit(1)
+    sys.exit(0)

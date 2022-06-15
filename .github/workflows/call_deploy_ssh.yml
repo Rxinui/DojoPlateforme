@@ -27,8 +27,10 @@ jobs:
           target-directory: /opt/pfe/DojoPlateforme
           pre-command: |
             cd /opt/pfe/DojoPlateforme &&
-            docker-compose down -v --remove-orphans
-          post-command: docker-compose up --build -d
+            ./setup.sh stop
+          post-command: |
+            echo "${{ secrets.ENV_DEPLOY }}" > .env &&
+            ./setup.sh start --build
             
 
 
