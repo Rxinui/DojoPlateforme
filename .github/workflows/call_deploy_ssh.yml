@@ -30,6 +30,7 @@ jobs:
             ./setup.sh stop
           post-command: |
             echo "${{ secrets.ENV_DEPLOY }}" > .env &&
+            ./setup.sh init --venv &&
             ./setup.sh start --build
             
 
