@@ -19,6 +19,7 @@
 #   $1: command to execute between single quote (ie. '<command>')
 ##
 sudoexec() {
+    # runuser -s /bin/bash -c "$1"
     sudo /bin/bash -c "$1"
 }
 
@@ -170,8 +171,23 @@ action_stop() {
 #   - Storage VMS basefolder
 #   - Storage .ovf images basefolder
 #
+# Options:
+#   --venv: Install python dependencies to a virtualenv
+#   --no-venv: Install python dependencies to global python env
 ##
 action_init() {
+    case $1 in
+    "-h" | "--help")
+        help_action_init
+        exit 0
+        ;;
+    "--venv")
+        _to_venv="y"
+        ;;
+    "--no-venv")
+        _to_venv="n"
+        ;;
+    esac
     log_info "Initializing DojoPlateforme..."
     # Linux/Unix packages and dependencies #
     action_check packages
@@ -181,12 +197,13 @@ action_init() {
     fi
     which virtualenv >/dev/null
     if [[ $? -eq 0 ]]; then
-        _to_venv="y"
-        read -p "Install python3.9 dependencies inside a virtualenv? [y/n] " _to_venv
+        if [[ -z $_to_venv ]]; then
+            read -p "Install python3.9 dependencies inside a virtualenv? [y/n] " _to_venv
+        fi
         if [[ $_to_venv == "y" || $_to_venv == "Y" ]]; then
             log_info "Installing within pyvenv/ ..."
             python3.9 -m venv pyvenv                     # create pyvenv
-            source ./pyvenv/bin/activate               # run the virtualenv
+            source ./pyvenv/bin/activate                 # run the virtualenv
             python3.9 -m pip install --upgrade pip       # install dependencies
             python3.9 -m pip install -r requirements.txt # install dependencies
         fi
@@ -197,17 +214,24 @@ action_init() {
     fi
     # Directories and files #
     log_info "Creating storage vms basefolder"
-    sudoexec "mkdir -m 755 -p ${STORAGE_VMS_BASEFOLDER}"
+    sudoexec "mkdir -m 777 -p ${STORAGE_VMS_BASEFOLDER}"
+    sudoexec "chown :$USER ${STORAGE_VMS_BASEFOLDER}"
     log_info "Creating storage .ovf images basefolder"
-    sudoexec "mkdir -m 755 -p ${STORAGE_OVF_BASEFOLDER}"
+    sudoexec "mkdir -m 777 -p ${STORAGE_OVF_BASEFOLDER}"
+    sudoexec "chown :$USER ${STORAGE_OVF_BASEFOLDER}"
     log_info "Creating system binaries folder"
-    mkdir -m 755 -p ${PWD}/bin/
+    sudoexec "mkdir -m 777 -p ${PWD}/bin/"
+    sudoexec "chown :$USER ${PWD}/bin/"
     log_info "Importing binaries script to binaries folder"
     api_vbox_request_path="$PWD/bin/api_vbox_request"
     ln -sf "$PWD/services/api_vbox/scripts/rabbitmq_server.py" $api_vbox_request_path
-    sudoexec "chmod 755 $api_vbox_request_path"
+    sudoexec "chmod 777 $api_vbox_request_path"
     sed -E -i "1 i\#!$(which python3.9)" $api_vbox_request_path
-    action_secret reload
+    action_check files --mode
+    if [[ $? -ne 0 ]]; then
+        log_error "Missing permissions on files to initialize DojoPlateforme correctly"
+        exit 2
+    fi
 }
 
 ##
@@ -248,6 +272,7 @@ action_status() {
 # Command 'check' performs verification to check requirements and services states
 ##
 action_check() {
+    declare -i check_code=0
     _h2() {
         echo -e -n "    $1:"
     }
@@ -255,23 +280,18 @@ action_check() {
         echo -e " \e[1m\e[32mOK\e[0m"
     }
     _ko() {
-        echo -e " \e[1m\e[33mKO\e[0m"
+        echo -e " \e[1m\e[33mKO\e[0m" && ((check_code++))
     }
     subaction_check() {
-        declare -i check_code=0
         case $1 in
         "-h" | "--help")
             help_action_check
             ;;
         "packages" | "dependencies")
+            shift
             log_info "Linux/Unix packages and dependencies"
             _h2 "python3.9"
-            which python3.9 >/dev/null
-            if [[ $? -eq 0 && $(python3.9 --version) == *"3.9."* ]]; then
-                _ok
-            else
-                _ko && ((check_code++))
-            fi
+            which python3.9 >/dev/null && [[ $? -eq 0 && $(python3.9 --version) == *"3.9."* ]] && _ok || _ko
             _h2 "pip3"
             (which pip3 >/dev/null) && [[ $? -eq 0 ]] && _ok || _ko
             _h2 "virtualenv"
@@ -287,28 +307,43 @@ action_check() {
             return $check_code
             ;;
         "directories" | "files")
+            shift
             log_info "Directories and files"
-            _h2 "Directory for STORAGE_OVF_BASEFOLDER"
-            [[ -d $STORAGE_OVF_BASEFOLDER ]] && _ok || _ko
-            _h2 "Directory for STORAGE_VMS_BASEFOLDER"
-            [[ -d $STORAGE_VMS_BASEFOLDER ]] && _ok || _ko
-            _h2 "Directory for project's binaries"
-            [[ -d $PWD/bin/ ]] && _ok || _ko
-            _h2 "DojoPlateforme's root project .env file"
-            [[ -f $PWD/.env ]] && _ok || _ko
-            return $check_code
+            case $1 in
+            "-m" | "--mode")
+                log_info "Checking permissions..."
+                _h2 "Directory for STORAGE_OVF_BASEFOLDER is readable and belong to '$USER'"
+                [[ -r $STORAGE_OVF_BASEFOLDER && (-G $STORAGE_OVF_BASEFOLDER || -O $STORAGE_OVF_BASEFOLDER) ]] && _ok || _ko
+                _h2 "Directory for STORAGE_VMS_BASEFOLDER is writable and belong to '$USER'"
+                [[ -w $STORAGE_VMS_BASEFOLDER && (-G $STORAGE_VMS_BASEFOLDER || -O $STORAGE_VMS_BASEFOLDER) ]] && _ok || _ko
+                _h2 "Directory for project's binaries"
+                [[ -d $PWD/bin/ ]] && _ok || _ko
+                _h2 "DojoPlateforme's root project .env file"
+                [[ -f $PWD/.env ]] && _ok || _ko
+                return $check_code
+                ;;
+            *)
+                _h2 "Directory for STORAGE_OVF_BASEFOLDER"
+                [[ -d $STORAGE_OVF_BASEFOLDER ]] && _ok || _ko
+                _h2 "Directory for STORAGE_VMS_BASEFOLDER"
+                [[ -d $STORAGE_VMS_BASEFOLDER ]] && _ok || _ko
+                _h2 "Directory for project's binaries"
+                [[ -d $PWD/bin/ ]] && _ok || _ko
+                _h2 "DojoPlateforme's root project .env file"
+                [[ -f $PWD/.env ]] && _ok || _ko
+                return $check_code
+                ;;
+            esac
             ;;
         *)
-            subaction_check packages
-            ((check_code = $?))
-            subaction_check directories
-            ((check_code += $?))
+            subaction_check packages $@
+            subaction_check directories $@
             return $check_code
             ;;
         esac
     }
     log_info "Checking DojoPlateforme's requirements..."
-    subaction_check $1
+    subaction_check $@
 }
 
 ##
@@ -321,9 +356,9 @@ action_uninstall() {
         pip3 uninstall -r requirements.txt -y
     else
         log_info "Removing python3.9 virtualenv pyvenv/..."
-        sudo rm -rf $PWD/pyvenv/
+        sudoexec "rm -rf $PWD/pyvenv/"
     fi
-    sudo rm -rf $STORAGE_OVF_BASEFOLDER $STORAGE_VMS_BASEFOLDER $PWD/bin/
+    sudoexec "rm -rf $STORAGE_OVF_BASEFOLDER $STORAGE_VMS_BASEFOLDER $PWD/bin/"
 }
 
 main() {
@@ -445,6 +480,23 @@ Various actions are available.
 
     [Options]
     --build     Build services from its Dockerfile (source)
+
+ACTIONS_OPTIONS are case-sensitive.
+EOF
+
+}
+
+help_action_init() {
+    cat <<EOF
+./setup.sh init: Init DojoPlateforme's requirements and dependencies
+
+Usage: sudo ./setup.sh init [ACTION_OPTIONS]
+
+Various actions are available.
+
+    [Options]
+    --venv        Install Python3.9 packages to a virtualenv. If virtualenv is installed.
+    --no-venv     Install Python3.9 packages to global python env.
 
 ACTIONS_OPTIONS are case-sensitive.
 EOF
