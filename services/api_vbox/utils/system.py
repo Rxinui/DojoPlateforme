@@ -67,6 +67,7 @@ def execute_cmd(
         raise EnvironmentError("API_VBOX_EXECMODE env variable is missing.")
     if exit_code == 0:
         logger.info("Command %s has been successfully executed", cmd)
+        logger.info(output)
     else:
         logger.error("Command %s has been failed (exit=%s)", cmd, exit_code)
         logger.error("Command error details: %s", error)

@@ -28,18 +28,11 @@ const __queryDb = async (query, rowsAsArray, args) => {
 };
 
 module.exports = {
-  getUserRoles: async function (userId) {
+  getRoleScopes: async function (roleId) {
     return __queryDb(
-      "SELECT roleName FROM RoleOwnedByUser WHERE userId=?;",
+      "SELECT apiName, scopeValue FROM ScopeAssignedToRole WHERE roleId=?;",
       true,
-      userId
-    );
-  },
-  getUserScopes: async function (userId) {
-    return __queryDb(
-      "SELECT apiName, scopeValue FROM ScopeAssignedToUser WHERE userId=?;",
-      true,
-      userId
+      roleId
     );
   },
   getUserById: async function (userId) {

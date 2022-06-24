@@ -44,7 +44,7 @@ async def vbox_manage_startvm(request: Request, vm_params: StartVMParams) -> Bas
         VBoxManageBuilder.startvm.vmname(vm_params.vmname).type(vm_params.type).build()
     )
     logger.info("Preparing startvm command: %s", cmd)
-    _, error, exit_code = execute_cmd(request.state.token_data["sub"], cmd)
+    _, error, exit_code = execute_cmd(request.state.token_payload["sub"], cmd)
     if exit_code != 0:
         logger.error("Command executed threw an error: %s", error)
         raise HTTPException(status.HTTP_409_CONFLICT, error)

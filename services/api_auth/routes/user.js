@@ -9,6 +9,7 @@ const router = express.Router();
 const saltRounds = 12;
 const JWT_EXPIRATION_TIME = "60m"; // 10 minute
 const SEP_JWT_MULTIVALUES = " ";
+// const DOJO_USER_ROLE = "deshi";
 router.use(express.json());
 
 router.get(
@@ -27,17 +28,17 @@ router.post("/login", async (request, reply, next) => {
       console.log("/login debug:", info, user);
       request.login(user, { session: false }, async (err) => {
         if (err) return next(err);
-        let roles = await dbconnector.getUserRoles(user.userId);
-        let scope = await dbconnector.getUserScopes(user.userId);
+        let role = user.roleId;
+        let scope = await dbconnector.getRoleScopes(user.roleId);
         const options = {
           issuer: "api_auth",
           subject: user.userId.toString(),
           expiresIn: JWT_EXPIRATION_TIME,
         };
-        const payload = {
-          user: { name: user.username, userId: user.userId },
-          roles: [...roles].flat(1).join(SEP_JWT_MULTIVALUES),
-          scope: scope.map((arr) => arr.join(":")).join(SEP_JWT_MULTIVALUES),
+        const payload = { 
+          user: user.username,
+          roles: role,
+          scope: scope.map((arr) => arr.join(":")).join(SEP_JWT_MULTIVALUES)
         };
         const token = jwt.sign(
           payload,

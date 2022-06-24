@@ -26,13 +26,13 @@ class VerifyScope(ABC):
         Returns:
             Request: request
         """
-        if not getattr(request.state, "token_data", None):
+        if not getattr(request.state, "token_payload", None):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Unauthorized access. Missing token payload. Must be authenticated first.",
             )
         scopes_valid = all(
-            s.value not in request.state.token_data["scope"] for s in scopes
+            s.value not in request.state.token_payload["scope"] for s in scopes
         )
         if scopes_valid:
             raise HTTPException(

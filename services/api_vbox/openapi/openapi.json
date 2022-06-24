@@ -54,7 +54,7 @@
             "in": "query"
           },
           {
-            "required": true,
+            "required": false,
             "schema": {
               "title": "Authorization",
               "type": "string"
@@ -157,7 +157,7 @@
         "operationId": "vbox_manage_import_import_post",
         "parameters": [
           {
-            "required": true,
+            "required": false,
             "schema": {
               "title": "Authorization",
               "type": "string"
@@ -220,7 +220,7 @@
         "operationId": "vbox_manage_startvm_startvm_post",
         "parameters": [
           {
-            "required": true,
+            "required": false,
             "schema": {
               "title": "Authorization",
               "type": "string"

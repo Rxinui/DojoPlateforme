@@ -37,7 +37,7 @@ def get_ovf_path(request: Request, ovf_name: str) -> str:
     """
     ovf_name = STORAGE_OVF_BASEFOLDER / ovf_name
     _, _, exit_code = execute_cmd(
-        request.state.token_data["sub"], ["ls", str(ovf_name)]
+        request.state.token_payload["sub"], ["ls", str(ovf_name)]
     )
     if exit_code != 0:
         logger.error("OVF image '%s' not found", ovf_name)
@@ -84,7 +84,7 @@ async def vbox_manage_import(
         .build()
     )
     logger.info("Prepared import command %s", cmd)
-    _, error, exit_code = execute_cmd(request.state.token_data["sub"], cmd)
+    _, error, exit_code = execute_cmd(request.state.token_payload["sub"], cmd)
     items.update(VBoxManageBuilder.import_image.parser.parse_result(error, exit_code))
     if exit_code != 0:
         logger.error("Command executed threw an error: %s", items["result"].split("\n"))

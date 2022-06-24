@@ -7,8 +7,8 @@ class TestApiList(TestApi):
     def setup_class(cls):
         super().authenticate(
             {
-                "username": "t.api_vbox.scope_1",
-                "email": "t.api_vbox.scope_1@dojo.dev",
+                "username": "test.api_vbox.kumite",
+                "email": "test.api_vbox.kumite@dojo.dev",
                 "password": "dojotest",
             }
         )
@@ -50,8 +50,8 @@ class TestApiList(TestApi):
     def test_illegal_user_scope(self):
         auth = self.get_auth(
             {
-                "username": "t.api_vbox.scope_2",
-                "email": "t.api_vbox.scope_2@dojo.dev",
+                "username": "test.user.deshi",
+                "email": "test.user.deshi@dojo.dev",
                 "password": "dojotest",
             }
         )

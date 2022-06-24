@@ -53,7 +53,7 @@ or launch the `dev.sh` script (recommended)
 Get a token bearer from `api_auth`
 ```bash
 curl -XPOST http://localhost:8000/user/login -H "Content-Type: application/json" -d '{"email": "shihan@dojo.dev", "password": "shihan"}'
-curl -XPOST http://localhost:8000/user/login -H "Content-Type: application/json" -d '{"email": "t.api_vbox.scope_3@dojo.dev", "password": "dojotest"}'
+curl -XPOST http://localhost:8000/user/login -H "Content-Type: application/json" -d '{"email": "test.api_vbox.kumite@dojo.dev", "password": "dojotest"}'
 ```
 
 Use `/list` with token bearer

@@ -11,8 +11,8 @@ class TestApiImport(TestApi):
     def setup_class(cls):
         super().authenticate(
             {
-                "username": "t.api_vbox.scope_2",
-                "email": "t.api_vbox.scope_2@dojo.dev",
+                "username": "test.api_vbox.kumite",
+                "email": "test.api_vbox.kumite@dojo.dev",
                 "password": "dojotest",
             }
         )

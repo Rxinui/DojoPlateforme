@@ -108,7 +108,7 @@ async def vbox_manage_list(
     )
     for directive in q:
         valid_directive, parsed = process_list_directive(
-            request.state.token_data["sub"], directive, sort=sort, long=long
+            request.state.token_payload["sub"], directive, sort=sort, long=long
         )
         items[valid_directive] = parsed
     return dict(

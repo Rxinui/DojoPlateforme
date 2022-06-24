@@ -4,9 +4,10 @@
 @date 2022-01-21
 @see https://www.virtualbox.org/manual/ch08.html
 """
-
 import json
+import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from models import BasicError
@@ -15,25 +16,21 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from dependencies.user import HTTPBearerTokenAuth
+from dependencies.user import auth_strategy
 from routers import list as route_list
 from routers import import_ as route_import
 from routers import startvm as route_startvm
 from openapi import api_vbox_openapi
-
 from utils import logger
-
-
-
-
 
 logger = logger(__name__, f"{__file__}.log")
 
-AuthStrategy = HTTPBearerTokenAuth
+AuthStrategy = auth_strategy(tag=os.getenv("API_VBOX_AUTH_STRATEGY",""))
 app = FastAPI(dependencies=[Depends(AuthStrategy)])
 app.include_router(route_list.router)
 app.include_router(route_import.router)
 app.include_router(route_startvm.router)
+
 
 def _openapi():
     """Update openAPI with custom values stored in openapi/.
@@ -55,6 +52,7 @@ def _openapi():
 
 
 app.openapi = _openapi
+
 
 @app.exception_handler(StarletteHTTPException)
 async def __http_exception_handler(request, exc):
