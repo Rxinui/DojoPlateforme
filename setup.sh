@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/bash -e
 
 ########## setup.sh ##########
 # Initialize an environment to meet the requirements with DojoPlateforme.
 #
 # Usage:
-#   sudo ./setup.sh <action> [ACTION_OPTIONS]
+#   ./setup.sh <action> [ACTION_OPTIONS]
 #
 # Options:
 #
@@ -13,14 +13,23 @@
 
 ########## System Functions ##########
 ##
-# Execute command as sudo user.
+# Execute command as given user.
 #
 # Paramters:
-#   $1: command to execute between single quote (ie. '<command>')
+#   $1: user who will execute the command
+#   $@: command to execute between single quote (ie. '<command>')
 ##
-sudoexec() {
-    # runuser -s /bin/bash -c "$1"
-    sudo /bin/bash -c "$1"
+exec_as() {
+    if [[ $# -lt 2 ]]; then
+        log_error "Must specify '--user' following by commands to execute"
+    fi
+    if [[ -z $1 ]]; then
+        log_error "Missing --user when executing command."
+        exit 2
+    fi
+    _user=$1
+    shift
+    runuser -u $_user -- $@
 }
 
 ##
@@ -214,18 +223,18 @@ action_init() {
     fi
     # Directories and files #
     log_info "Creating storage vms basefolder"
-    sudoexec "mkdir -m 777 -p ${STORAGE_VMS_BASEFOLDER}"
-    sudoexec "chown :$USER ${STORAGE_VMS_BASEFOLDER}"
+    mkdir -m 777 -p ${STORAGE_VMS_BASEFOLDER}
+    chown :$USER ${STORAGE_VMS_BASEFOLDER}
     log_info "Creating storage .ovf images basefolder"
-    sudoexec "mkdir -m 777 -p ${STORAGE_OVF_BASEFOLDER}"
-    sudoexec "chown :$USER ${STORAGE_OVF_BASEFOLDER}"
+    mkdir -m 777 -p ${STORAGE_OVF_BASEFOLDER}
+    chown :$USER ${STORAGE_OVF_BASEFOLDER}
     log_info "Creating system binaries folder"
-    sudoexec "mkdir -m 777 -p ${PWD}/bin/"
-    sudoexec "chown :$USER ${PWD}/bin/"
+    mkdir -m 777 -p ${PWD}/bin/
+    chown :$USER ${PWD}/bin/
     log_info "Importing binaries script to binaries folder"
     api_vbox_request_path="$PWD/bin/api_vbox_request"
     ln -sf "$PWD/services/api_vbox/scripts/rabbitmq_server.py" $api_vbox_request_path
-    sudoexec "chmod 777 $api_vbox_request_path"
+   chmod 777 $api_vbox_request_path
     sed -E -i "1 i\#!$(which python3.9)" $api_vbox_request_path
     action_check files --mode
     if [[ $? -ne 0 ]]; then
@@ -265,7 +274,7 @@ action_status() {
         esac
         shift
     done
-    sudoexec "$_cmd_status"
+    $_cmd_status
 }
 
 ##
@@ -356,9 +365,9 @@ action_uninstall() {
         pip3 uninstall -r requirements.txt -y
     else
         log_info "Removing python3.9 virtualenv pyvenv/..."
-        sudoexec "rm -rf $PWD/pyvenv/"
+        rm -rf $PWD/pyvenv/
     fi
-    sudoexec "rm -rf $STORAGE_OVF_BASEFOLDER $STORAGE_VMS_BASEFOLDER $PWD/bin/"
+    rm -rf $STORAGE_OVF_BASEFOLDER $STORAGE_VMS_BASEFOLDER $PWD/bin/
 }
 
 main() {
@@ -404,7 +413,7 @@ help_main() {
     cat <<EOF
 ./setup.sh: Setup the machine to run DojoPlateforme.
 
-Usage: sudo ./setup.sh <action> [ACTION_OPTIONS]
+Usage: ./setup.sh <action> [ACTION_OPTIONS]
 
 Various actions are available.
 
@@ -425,7 +434,7 @@ help_action_status() {
     cat <<EOF
 ./setup.sh status: Check status of DojoPlateforme's services
 
-Usage: sudo ./setup.sh status [ACTION_OPTIONS]
+Usage: ./setup.sh status [ACTION_OPTIONS]
 
 Various actions are available.
 
@@ -441,7 +450,7 @@ help_action_check() {
     cat <<EOF
 ./setup.sh check: Verify services status and initializiation status
 
-Usage: sudo ./setup.sh check [ACTION_OPTIONS]
+Usage: ./setup.sh check [ACTION_OPTIONS]
 
 Various actions are available.
 
@@ -457,7 +466,7 @@ help_action_secret() {
     cat <<EOF
 ./setup.sh secret: Perform action in relation with secrets
 
-Usage: sudo ./setup.sh secret [ACTION_OPTIONS]
+Usage: ./setup.sh secret [ACTION_OPTIONS]
 
 Various actions are available.
 
@@ -474,7 +483,7 @@ help_action_start() {
     cat <<EOF
 ./setup.sh start: Start DojoPlateforme's services
 
-Usage: sudo ./setup.sh start [ACTION_OPTIONS]
+Usage: ./setup.sh start [ACTION_OPTIONS]
 
 Various actions are available.
 
@@ -490,7 +499,7 @@ help_action_init() {
     cat <<EOF
 ./setup.sh init: Init DojoPlateforme's requirements and dependencies
 
-Usage: sudo ./setup.sh init [ACTION_OPTIONS]
+Usage: ./setup.sh init [ACTION_OPTIONS]
 
 Various actions are available.
 

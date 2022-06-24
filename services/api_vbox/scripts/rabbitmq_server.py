@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 # Global constants
 FILE_REALPATH = Path(os.path.realpath(__file__))
 GLOBAL_ENV_PATH = FILE_REALPATH.parents[1]
-LOGFILE = f"/var/log/{FILE_REALPATH.name}.log"
+LOGFILE = Path(f"/var/log/{FILE_REALPATH.name}.log")
 LOGLEVEL = logging.INFO
 EXEC_TIMEOUT = 300
 EXIT_TIMEOUT_EXPIRED = -1000
@@ -39,12 +39,21 @@ try:
     )
     logger = logging.getLogger(__name__)
     logger.addHandler(handler)
-    logger.addHandler(logging.StreamHandler())
     logger.setLevel(LOGLEVEL)
 except PermissionError as exc:
     print(f"{exc.strerror}: '{LOGFILE}'", file=sys.stderr)
-    print("Please, try to run the script as root-user.", file=sys.stderr)
+    print(
+        f"Please, user '{os.getenv('USER')}' needs write permission \
+        to {LOGFILE.parent}/ directory.",
+        file=sys.stderr,
+    )
+    print(
+        f"This script must be executed by a user \
+        that has access to {os.getenv('STORAGE_VMS_BASEFOLDER')}.",
+        file=sys.stderr,
+    )
     sys.exit(exc.errno)
+
 logger.info("Load .env file from '%s'", GLOBAL_ENV_PATH)
 load_dotenv(GLOBAL_ENV_PATH / ".env")
 
@@ -76,6 +85,7 @@ def _execute_cmd(cmd: List[str]) -> Tuple[str, str, int]:
                 "subprocess timeout expired.",
                 EXIT_TIMEOUT_EXPIRED,
             )
+
         return output, error, exit_code
 
 
@@ -103,6 +113,7 @@ def on_request(
         response["res"]["error"],
         response["res"]["exit_code"],
     ) = _execute_cmd(response["req"]["cmd"])
+    logger.info(response["res"])
     ch.basic_publish(
         exchange="",
         routing_key=props.reply_to,  # REPLY_QUEUE defined by Client

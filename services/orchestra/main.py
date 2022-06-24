@@ -20,3 +20,7 @@ async def __http_exception_handler(request, exc):
         status_code=exc.status_code,
         content=exc.detail
     )
+
+@app.get("/")
+def home() -> dict:
+    return dict(hello="world")

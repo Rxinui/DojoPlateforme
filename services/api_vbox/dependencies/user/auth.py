@@ -86,7 +86,9 @@ class HTTPBearerTokenAuth:
             logger.info("authentication on 'api_auth' is %s.", response.reason_phrase)
             self.__verify(request, response)
 
+
 class NoAuth:
+    """No Authentication strategy"""
 
     def __init__(self, request: Request, authorization: str = Header(default=None)):
         """ "Requires 'Authorization' header to proceed.
@@ -106,4 +108,3 @@ class NoAuth:
             Request: updated request with 'token_payload'
         """
         request.state.token_payload = {"sub": "noauth.guest", "scope": Scope.ALL.value}
-

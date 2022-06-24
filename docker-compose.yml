@@ -76,7 +76,7 @@ services:
       - API_VBOX_EXECMODE=container
       - API_VBOX_AUTH_STRATEGY=HTTPBearerTokenAuth
       - STORAGE_VMS_BASEFOLDER=${STORAGE_VMS_BASEFOLDER:-/var/opt/DojoPlateforme/vms/}
-      - STORAGE_OVF_BASEFOLDER=${STORAGE_OVF_BASEFOLDER:-/usr/share/DojoPlateforme/ovf/}
+      - STORAGE_OVF_BASEFOLDER=${STORAGE_OVF_BASEFOLDER:-/usr/share/DojoPlateforme/ova/}
       - RABBITMQ_HOST=172.20.0.30
       - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
       - API_VBOX_USERS_REQUEST_QUEUE=${API_VBOX_USERS_REQUEST_QUEUE:-api_vbox.users.request_queue}
