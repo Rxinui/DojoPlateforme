@@ -7,19 +7,46 @@ Enable the use of `VBoxManage import` by HTTP using the api_vbox
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from fastapi import APIRouter, status, HTTPException, Request, Depends
 from models import BasicResponse, BasicError, OvfSessionParams
 from vboxmanage import VBoxManageBuilder
-from utils import logger, execute_cmd, execute_future_cmd
+from utils import logger, execute_cmd
 from dependencies.user import CreateScope
 
-load_dotenv()
+# load_dotenv()
 logger = logger(__name__, "main.py.log")
 router = APIRouter(tags=["import"])
 
 STORAGE_VMS_BASEFOLDER = Path(os.getenv("STORAGE_VMS_BASEFOLDER"))
-STORAGE_OVF_BASEFOLDER= Path(os.getenv("STORAGE_OVF_BASEFOLDER"))
+STORAGE_OVF_BASEFOLDER = Path(os.getenv("STORAGE_OVF_BASEFOLDER"))
+
+
+def get_ovf_path(request: Request, ovf_name: str) -> str:
+    """Get OVF image path from OVF image name.
+
+    Args:
+        request (Request): request emitted
+        ovf_name (str): .ovf image name
+
+    Raises:
+        HTTPException: .ovf image is not found
+
+    Returns:
+        str: .ovf image path
+    """
+    ovf_name = STORAGE_OVF_BASEFOLDER / ovf_name
+    _, _, exit_code = execute_cmd(
+        request.state.token_data["sub"], ["ls", str(ovf_name)]
+    )
+    if exit_code != 0:
+        logger.error("OVF image '%s' not found", ovf_name)
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail=f"OVF image '{ovf_name}' not found",
+        )
+    return str(ovf_name)
+
 
 @router.post(
     "/import",
@@ -46,15 +73,7 @@ async def vbox_manage_import(
     Returns:
         BasicResponse: success response
     """
-    ovf_params.image = STORAGE_OVF_BASEFOLDER / ovf_params.image
-    _, _, exit_code = execute_cmd(request.state.token_data["sub"], ["ls",str(ovf_params.image)])
-    if exit_code != 0:
-        logger.error("OVF image '%s' not found", ovf_params.image)
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND,
-            detail=f"OVF image '{ovf_params.image}' not found",
-        )
-    ovf_params.image = str(ovf_params.image)
+    ovf_params.image = get_ovf_path(request, ovf_params.image)
     logger.info("OVF image '%s' is found", ovf_params.image)
     items = {"params": ovf_params}
     cmd = (
@@ -71,19 +90,6 @@ async def vbox_manage_import(
         logger.error("Command executed threw an error: %s", items["result"].split("\n"))
         raise HTTPException(status.HTTP_409_CONFLICT, items["result"])
     logger.info("Command executed is a success: %s", items["result"].split("\n"))
-    if ovf_params.expires_in > 0:
-        # TODO fix this when EXECMODE=container -- impossible to use future thread
-        logger.info(
-            "Auto-delete on '%s' in %s seconds",
-            ovf_params.vmname,
-            ovf_params.expires_in,
-        )
-        cmd_delete_vm = (
-            VBoxManageBuilder.unregistervm.vmname(ovf_params.vmname).delete().build()
-        )
-        execute_future_cmd(
-            request.state.token_data["sub"], cmd_delete_vm, ovf_params.expires_in
-        )
     return BasicResponse(
         msg=f"Importation of {ovf_params.image} is a success.", items=items
     )

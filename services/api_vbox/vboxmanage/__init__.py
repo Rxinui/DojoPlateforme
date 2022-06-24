@@ -26,5 +26,5 @@ class VBoxManageBuilder:
 
     @classmethod
     @property
-    def startvm(cls) -> VBoxManageUnregistervm:
-        return VBoxManageUnregistervm()
+    def startvm(cls) -> VBoxManageStartvm:
+        return VBoxManageStartvm()

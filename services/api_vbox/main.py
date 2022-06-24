@@ -5,8 +5,10 @@
 @see https://www.virtualbox.org/manual/ch08.html
 """
 
-
 import json
+from dotenv import load_dotenv
+load_dotenv()
+
 from models import BasicError
 from fastapi import FastAPI, status, Depends
 from fastapi.exceptions import RequestValidationError
@@ -16,12 +18,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from dependencies.user import HTTPBearerTokenAuth
 from routers import list as route_list
 from routers import import_ as route_import
+from routers import startvm as route_startvm
 from openapi import api_vbox_openapi
-from dotenv import load_dotenv
+
 from utils import logger
 
 
-load_dotenv()
+
 
 
 logger = logger(__name__, f"{__file__}.log")
@@ -30,6 +33,7 @@ AuthStrategy = HTTPBearerTokenAuth
 app = FastAPI(dependencies=[Depends(AuthStrategy)])
 app.include_router(route_list.router)
 app.include_router(route_import.router)
+app.include_router(route_startvm.router)
 
 def _openapi():
     """Update openAPI with custom values stored in openapi/.

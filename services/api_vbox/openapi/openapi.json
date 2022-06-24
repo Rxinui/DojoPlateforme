@@ -209,6 +209,69 @@
           }
         }
       }
+    },
+    "/startvm": {
+      "post": {
+        "tags": [
+          "startvm"
+        ],
+        "summary": "Vbox Manage Startvm",
+        "description": "Apply `VBoxManage startvm` command depending on {vm_params}.\n\nIt will start a VM.\n\nArgs:\n    request (Request): request emitted\n    vm_params (StartVMParams): startvm directive parameters\n\nRaises:\n    HTTPException: vm with given name {vmname} does not exist\n    HTTPException: error threw during the execution of `VBoxManage startvm`\n\nReturns:\n    BasicResponse: success response",
+        "operationId": "vbox_manage_startvm_startvm_post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            },
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartVMParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -311,6 +374,25 @@
           }
         },
         "description": "Datamodel for OVF session parameters.\n\nAttributes:\n    image (Path[str]): specify ovf image path\n    vmname (str): name to assign to the vm\n    options (List[bool]): options to keep in the following order\n                          between 'keepallmacs', 'keepnatmacs', 'importtovdi'\n    vsys (Union[int, str]): virtual system to use\n    expires_in (Optional[int]): time to live in seconds of the vm. Specify when to delete it."
+      },
+      "StartVMParams": {
+        "title": "StartVMParams",
+        "required": [
+          "vmname"
+        ],
+        "type": "object",
+        "properties": {
+          "vmname": {
+            "title": "Vmname",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string",
+            "default": "headless"
+          }
+        },
+        "description": "Datamodel for VBoxManage StartVM directive\n\nAttributes:\n    vmname (str): VM's name to start\n    type (Optional[str]): type of start [\"headless\" | \"gui\" | \"separate\"]"
       },
       "ValidationError": {
         "title": "ValidationError",

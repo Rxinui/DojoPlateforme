@@ -26,3 +26,13 @@ class OvfSessionParams(BaseModel):
     options: List[bool] = []
     vsys: Union[int, str] = 0
     expires_in: Optional[int] = 0
+
+class StartVMParams(BaseModel):
+    """Datamodel for VBoxManage StartVM directive
+
+    Attributes:
+        vmname (str): VM's name to start
+        type (Optional[str]): type of start ["headless" | "gui" | "separate"]
+    """
+    vmname: str = ...
+    type: Optional[str] = "headless"

@@ -69,12 +69,12 @@ class TestApiImport(TestApi):
         self.response = self.client.post("/import", auth=self.auth, json=ovf_params)
         assert self.response.status_code == HTTPStatus.CONFLICT
 
-    def test_import_ovf_with_expires_time(self):
-        DELTA_PROCESS_TIME = 3
-        self.vmname = self._create_vmname("test-vm-expires-time")
-        ovf_params = {"vmname": self.vmname, "image": self.ovf, "expires_in": 15}
-        self.response = self.client.post("/import", auth=self.auth, json=ovf_params)
-        assert self.response.status_code == HTTPStatus.ACCEPTED
-        assert self._is_vm_created(self.vmname)
-        time.sleep(ovf_params["expires_in"] + DELTA_PROCESS_TIME)
-        assert not self._is_vm_created(self.vmname)
+    # def test_import_ovf_with_expires_time(self):
+    #     DELTA_PROCESS_TIME = 3
+    #     self.vmname = self._create_vmname("test-vm-expires-time")
+    #     ovf_params = {"vmname": self.vmname, "image": self.ovf, "expires_in": 15}
+    #     self.response = self.client.post("/import", auth=self.auth, json=ovf_params)
+    #     assert self.response.status_code == HTTPStatus.ACCEPTED
+    #     assert self._is_vm_created(self.vmname)
+    #     time.sleep(ovf_params["expires_in"] + DELTA_PROCESS_TIME)
+    #     assert not self._is_vm_created(self.vmname)

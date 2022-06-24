@@ -89,7 +89,7 @@ disable=raw-checker-failed,
         unused-argument, # to ignore design pattern
         attribute-defined-outside-init, # to ignore pytest.setup_method(self)
         too-few-public-methods,
-        #wrong-import-position # to ignore when dotenv.load_dotenv() is called at the beginning
+        wrong-import-position # to ignore when dotenv.load_dotenv() is called at the beginning
         
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
